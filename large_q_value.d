@@ -12,17 +12,19 @@ extern (C) {
   double spline_fit(double* lambda, double* pi0, size_t length);
 }
 
-pure ref size_t[] bestRank(in double[] rankArray, ref size_t[] bestIndex){
-  immutable size_t len = rankArray.length;
+pure size_t[] bestRank(in double[] rankArray, ref size_t[] orderIndex){
+  import std.algorithm : makeIndex;
 
+  immutable size_t len = rankArray.length;
+  auto bestIndex = new size_t[len];
   size_t dupcount = 0;
 
-  foreach(i, ref e; bestIndex)
+  foreach(i, ref e; orderIndex)
     {
       dupcount++;
-      if (i == (len - 1) || rankArray[e] < rankArray[bestIndex[i + 1]] - EPSILON)
+      if (i == (len - 1) || fabs(rankArray[e]) < fabs(rankArray[orderIndex[i + 1]]))
 	{
-	  foreach(ref j; bestIndex[(i - dupcount + 1)..(i + 1)])
+	  foreach(ref j; orderIndex[(i - dupcount + 1)..(i + 1)])
 	    bestIndex[j] = i + 1;
 	  dupcount = 0;
 	}
@@ -53,10 +55,10 @@ void main(in string[] args){
   foreach(ref e; pVals)
     assert(e<=1 && e>=0);
   auto orderIndex = new size_t[pVals.length];
-  makeIndex!()(pVals, orderIndex);
-  auto bestIndex = orderIndex.dup;
+  makeIndex!("a<b")(pVals, orderIndex);
 
-  bestRank(pVals, bestIndex);
+  size_t[] bestIndex =  bestRank(pVals, orderIndex);
+
   double[] lambda = iota(0, 0.95, 0.05).array;
   double[] pi0;
 
@@ -70,7 +72,7 @@ void main(in string[] args){
   size_t i = 0;
   foreach(ref e; pVals)
     {
-      qVal ~= pi0Est * e * pVals.length / orderIndex[i];
+      qVal ~= pi0Est * e * pVals.length / bestIndex[i];
       ++i;
     }
   writeln(pi0Est);

@@ -8,7 +8,6 @@ double spline_fit(double* lambda, double* pi0, size_t length)
   size_t i, j;
   gsl_bspline_workspace *bw;
   gsl_vector *B;
-  double dy;
   gsl_vector *c;
   gsl_vector *x, *y;
   gsl_matrix *X, *cov;
@@ -56,7 +55,7 @@ double spline_fit(double* lambda, double* pi0, size_t length)
   gsl_multifit_linear(X, y, c, cov, &chisq, mw);
 
   //  output the smoothed curve
-  double xi, yi, yerr;
+  double yi, yerr;
   gsl_bspline_eval(0.9, B, bw);
   gsl_multifit_linear_est(B, c, cov, &yi, &yerr);
 
