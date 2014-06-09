@@ -1,10 +1,9 @@
 #include <gsl/gsl_bspline.h>
 #include <gsl/gsl_multifit.h>
 
-double spline_fit(double* lambda, double* pi0, size_t length)
+void spline_fit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff)
 {
-  const size_t ncoeffs = 12;
-  const size_t nbreak = 10;
+  int nbreak = ncoeff - 2;
   size_t i, j;
   gsl_bspline_workspace *bw;
   gsl_vector *B;
@@ -16,14 +15,14 @@ double spline_fit(double* lambda, double* pi0, size_t length)
 
   /* allocate a cubic bspline workspace (k = 4) */
   bw = gsl_bspline_alloc(4, nbreak);
-  B = gsl_vector_alloc(ncoeffs);
+  B = gsl_vector_alloc(ncoeff);
 
   x = gsl_vector_alloc(length);
   y = gsl_vector_alloc(length);
-  X = gsl_matrix_alloc(length, ncoeffs);
-  c = gsl_vector_alloc(ncoeffs);
-  cov = gsl_matrix_alloc(ncoeffs, ncoeffs);
-  mw = gsl_multifit_linear_alloc(length, ncoeffs);
+  X = gsl_matrix_alloc(length, ncoeff);
+  c = gsl_vector_alloc(ncoeff);
+  cov = gsl_matrix_alloc(ncoeff, ncoeff);
+  mw = gsl_multifit_linear_alloc(length, ncoeff);
 
   /* this is the data to be fitted */
   for (i = 0; i < length; ++i)
@@ -33,7 +32,7 @@ double spline_fit(double* lambda, double* pi0, size_t length)
     }
 
   /* use uniform breakpoints on [0, 15] */
-  gsl_bspline_knots_uniform(0.0, 0.9, bw);
+  gsl_bspline_knots_uniform(lambda[0], lambda[length - 1], bw);
 
   /* construct the fit matrix X */
   for (i = 0; i < length; ++i)
@@ -44,7 +43,7 @@ double spline_fit(double* lambda, double* pi0, size_t length)
       gsl_bspline_eval(xi, B, bw);
 
       /* fill in row i of X */
-      for (j = 0; j < ncoeffs; ++j)
+      for (j = 0; j < ncoeff; ++j)
         {
           double Bj = gsl_vector_get(B, j);
           gsl_matrix_set(X, i, j, Bj);
@@ -55,9 +54,12 @@ double spline_fit(double* lambda, double* pi0, size_t length)
   gsl_multifit_linear(X, y, c, cov, &chisq, mw);
 
   //  output the smoothed curve
-  double yi, yerr;
-  gsl_bspline_eval(0.9, B, bw);
-  gsl_multifit_linear_est(B, c, cov, &yi, &yerr);
+  double yerr;
+  for (i = 0; i < length; i++)
+    {
+      gsl_bspline_eval(lambda[i], B, bw);
+      gsl_multifit_linear_est(B, c, cov, pi0Est++, &yerr);
+    }
 
   gsl_bspline_free(bw);
   gsl_vector_free(B);
@@ -68,5 +70,4 @@ double spline_fit(double* lambda, double* pi0, size_t length)
   gsl_matrix_free(cov);
   gsl_multifit_linear_free(mw);
 
-  return yi;
 }
