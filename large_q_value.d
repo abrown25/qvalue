@@ -87,8 +87,6 @@ void main(in string[] args){
   auto orderIndex = new size_t[pVals.length];
   makeIndex!("a<b")(pVals, orderIndex);
 
-  size_t[] bestIndex =  bestRank(pVals, orderIndex);
-
   double pi0Final;
   if (opts.pi0.isNaN)
     {
@@ -130,6 +128,15 @@ void main(in string[] args){
 	pi0Est[0] = pi0[0];
 
       pi0Final = min(pi0Est[$ - 1], 1);
+
+      try{
+	enforce(pi0Final > 0,
+		new InputException("Pi0 estimate is <= 0"));
+      } catch (InputException e) {
+	writeln(e.msg);
+	exit(0);
+      }
+
       if (opts.writeParam)
 	{
 	  paramFile.writeln("#The estimated value of ",to!dchar(0x03C0),"0 is:         ", pi0Final, "\n");
@@ -160,12 +167,13 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
     }
 
   double[] qVal;
+
+  size_t[] bestIndex =  bestRank(pVals, orderIndex);
+
   if (opts.robust)
-      foreach(i, ref e; pVals)
-	qVal ~= pi0Final * e * pVals.length / (bestIndex[i] * (1 - pow(1 - e, pVals.length)));
+    qVal = map!(a => pi0Final * pVals[a] * pVals.length / (bestIndex[a] * (1 - pow(1 - pVals[a], pVals.length))))(iota(0, pVals.length)).array;
   else
-      foreach(i, ref e; pVals)
-	qVal ~= pi0Final * e * pVals.length / bestIndex[i];
+    qVal = map!(a => pi0Final * pVals[a] * pVals.length / bestIndex[a])(iota(0, pVals.length)).array;
 
   qVal[orderIndex[$-1]] = qVal[orderIndex[$ - 1]] > 1 ? 1 : qVal[orderIndex[$ - 1]];
 
