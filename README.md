@@ -1,4 +1,9 @@
+An implementation of the qvalue package:
+
+qvalue: Q-value estimation for false discovery rate control. Alan Dabney and John D. Storey and with assistance from Gregory R. Warnes. R package version 1.34.0.
+
 Usage: large_q_value [options]
+
 Options:
     --help     : Print help and quit
     --header   : Input has header line
