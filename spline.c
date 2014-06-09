@@ -1,7 +1,46 @@
 #include <gsl/gsl_bspline.h>
 #include <gsl/gsl_multifit.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
-void spline_fit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff)
+void bootSample(size_t* boots, size_t* counts, size_t countSize)
+{
+
+  int i, j;
+
+  size_t sum = 0;
+  for (i=0; i < countSize; i++)
+    sum += counts[i];
+
+  const gsl_rng_type * T;
+  gsl_rng * r;
+
+
+  /* create a generator chosen by the
+     environment variable GSL_RNG_TYPE */
+
+  gsl_rng_env_setup();
+
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
+
+  size_t left;
+  double prob;
+  for (i = 0; i < 100; i++)
+    {
+      left = sum;
+      for (j = 0; j < countSize; j++)
+	{
+	  prob = 1.0 * counts[j] / left;
+	  boots[countSize * i + j] = gsl_ran_binomial (r, prob, left);
+      left -= boots[countSize * i + j];
+	}
+    }
+  gsl_rng_free (r);
+}
+
+
+void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff)
 {
   int nbreak = ncoeff - 2;
   size_t i, j;
