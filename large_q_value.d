@@ -5,7 +5,7 @@ import std.array;
 import std.algorithm : find, makeIndex, reduce;
 import std.range;
 import std.string : chomp;
-import std.math : fabs, isNaN;
+import std.math : fabs, isNaN, log, exp, pow;
 import parse_arg;
 
 enum double EPSILON = 0.00000001;
@@ -36,17 +36,23 @@ void main(in string[] args){
 
   Opts opts = new Opts(cast(string[])args[1..$]);
 
-  File inFile = File(opts.input);
-
+  File inFile;
   File outFile;
-  if (opts.outF == "")
-    outFile = stdout;
-  else
-    outFile = File(opts.outF, "w");
-
   File paramFile;
-  if (opts.writeParam)
-    paramFile = File(opts.param, "w");
+
+  try{
+    inFile = File(opts.input);
+    if (opts.outF == "")
+      outFile = stdout;
+    else
+      outFile = File(opts.outF, "w");
+    if (opts.writeParam)
+      paramFile = File(opts.param, "w");
+  } catch (Exception e){
+    writeln(e.msg);
+    exit(0);
+  }
+
 
   double[] pVals;
 
@@ -58,14 +64,27 @@ void main(in string[] args){
       auto splitLine = line.split;
 	{
 	  try{
+	    enforce(splitLine.length > opts.col -1,
+		    new InputException("Column with p values doesn't exist"));
 	    pVals ~= to!double(splitLine[opts.col - 1]);
-	  } catch (ConvException e){
+	  } catch (ConvException e) {
+	  } catch (InputException e) {
+	    writeln(e.msg);
+	    exit(0);
 	  }
 	}
     }
 
-  foreach(ref e; pVals)
-    assert(e<=1 && e>=0);
+  try{
+    enforce(pVals.length > 0,
+	    new InputException("No p values read"));
+    foreach(ref e; pVals)
+      enforce(e<=1 && e>=0,
+	      new InputException("Some p values are outside [0, 1] interval"));
+  } catch (InputException e){
+    writeln(e.msg);
+    exit(0);
+  }
 
   auto orderIndex = new size_t[pVals.length];
   makeIndex!("a<b")(pVals, orderIndex);
@@ -86,18 +105,28 @@ void main(in string[] args){
 	  .length;
       foreach(i, ref e; pi0)
 	e = (pVals.length - e) / (1 - lambda[i]) / pVals.length;
+      if (opts.smoother){
+	foreach(ref e; pi0)
+	  e = log(e);
+      }
       double[] pi0Est = new double[lambda.length];
-
       spline_fit(lambda.ptr, pi0.ptr, pi0Est.ptr, lambda.length, opts.ncoeff);
-      pi0Final = pi0Est[$ - 1];
+      if (opts.smoother){
+	foreach(ref e; pi0)
+	  e = exp(e);
+	foreach(ref e; pi0Est)
+	  e = exp(e);
+      }
+
+      pi0Final = min(pi0Est[$ - 1], 1);
       if (opts.writeParam)
 	{
-	  paramFile.writeln("The estimated value of ",to!dchar(0x03C0),"0 is:         ", pi0Final, "\n");
+	  paramFile.writeln("#The estimated value of ",to!dchar(0x03C0),"0 is:         ", pi0Final, "\n");
 	  paramFile.writeln(
 			    to!dchar(0x03BB), " values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
-			    "with the corresponding ", to!dchar(0x03C0), "0 values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
-			    "with spline-smoothed", to!dchar(0x03C0), "0 values:     [", join(to!(string[])(pi0Est), ", "), "]");
-	  paramFile.writeln("\n###R code to produce diagnostic plots and qvalue package estimate of ", to!dchar(0x03C0),"0\n");
+			    "#with the corresponding ", to!dchar(0x03C0), "0 values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
+			    "#and spline-smoothed ", to!dchar(0x03C0), "0 values:        [", join(to!(string[])(pi0Est), ", "), "]\n");
+	  paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of ", to!dchar(0x03C0),"0\n");
 	  paramFile.writeln("data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
                    pi0 = c(", join(to!(string[])(pi0), ", "), "),
                    pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
@@ -113,12 +142,23 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
 	}
     }
   else
-    pi0Final = opts.pi0;
+    {
+      pi0Final = opts.pi0;
+      if (opts.writeParam)
+	paramFile.writeln("Using specified value of ", to!dchar(0x03C0), "0 = ", pi0Final);
+    }
 
   double[] qVal;
+  if (opts.robust)
+    {
   foreach(i, ref e; pVals)
-    qVal ~= pi0Final * e * pVals.length / bestIndex[i];
-
+    qVal ~= pi0Final * e * pVals.length / (bestIndex[i] * (1 - pow(1 - e, pVals.length)));
+    }
+  else
+    {
+      foreach(i, ref e; pVals)
+	qVal ~= pi0Final * e * pVals.length / bestIndex[i];
+    }
   qVal[orderIndex[$-1]] = qVal[orderIndex[$ - 1]] > 1 ? 1 : qVal[orderIndex[$ - 1]];
 
   foreach(ref e; iota(qVal.length - 2, 0, -1))
