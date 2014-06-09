@@ -4,6 +4,7 @@ import std.conv;
 import std.array;
 import std.algorithm : find, makeIndex, reduce;
 import std.range;
+import std.string : chomp;
 import std.math : fabs;
 
 enum double EPSILON = 0.00000001;
@@ -13,8 +14,6 @@ extern (C) {
 }
 
 pure size_t[] bestRank(in double[] rankArray, ref size_t[] orderIndex){
-  import std.algorithm : makeIndex;
-
   immutable size_t len = rankArray.length;
   auto bestIndex = new size_t[len];
   size_t dupcount = 0;
@@ -76,8 +75,30 @@ void main(in string[] args){
       ++i;
     }
   writeln(pi0Est);
-  writeln(pVals[0..10]);
-  writeln(qVal[0..10]);
-  writeln(orderIndex[2], pVals[2], " ", bestIndex[1], pVals[1]);
-  qVal[orderIndex[0]] = (qVal[orderIndex[0]] > 1) ? 1 : qVal[orderIndex[0]];
+
+  qVal[orderIndex[$-1]] = qVal[orderIndex[$-1]] > 1 ? 1 : qVal[orderIndex[$-1]];
+  foreach(ref e; iota(qVal.length - 2, 0, -1))
+    qVal[orderIndex[e]] = qVal[orderIndex[e]] > qVal[orderIndex[e + 1]] ? qVal[orderIndex[e + 1]]
+                                                                        : qVal[orderIndex[e]];
+  File outFile = File("temp", "w");
+  inFile.seek(0);
+  outFile.writeln(chomp(inFile.readln), "\tQvalue");
+  i = 0;
+  foreach(ref line; inFile.byLine)
+    {
+      auto splitLine = line.split;
+      if (find(splitLine[$-1], "lcl_vqtl").empty)
+	{
+	  try{
+	    to!double(splitLine[3]);
+	    outFile.writeln(line, "\t", qVal[i]);
+	    i++;
+	  } catch (ConvException e){
+	    outFile.writeln(line, "\tNA");
+	  }
+	}
+      else
+	    outFile.writeln(line, "\tNA");
+   }
+
 }
