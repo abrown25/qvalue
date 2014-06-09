@@ -62,24 +62,22 @@ void main(in string[] args){
   foreach(ref line; inFile.byLine)
     {
       auto splitLine = line.split;
-	{
-	  try{
-	    enforce(splitLine.length > opts.col -1,
-		    new InputException("Column with p values doesn't exist"));
-	    pVals ~= to!double(splitLine[opts.col - 1]);
-	  } catch (ConvException e) {
-	  } catch (InputException e) {
-	    writeln(e.msg);
-	    exit(0);
-	  }
-	}
+      try{
+	enforce(splitLine.length > opts.col -1,
+		new InputException("Column with p values doesn't exist"));
+	pVals ~= to!double(splitLine[opts.col - 1]);
+      } catch (ConvException e) {
+      } catch (InputException e) {
+	writeln(e.msg);
+	exit(0);
+      }
     }
 
   try{
     enforce(pVals.length > 0,
 	    new InputException("No p values read"));
     foreach(ref e; pVals)
-      enforce(e<=1 && e>=0,
+      enforce(e <= 1 && e >= 0,
 	      new InputException("Some p values are outside [0, 1] interval"));
   } catch (InputException e){
     writeln(e.msg);
@@ -96,34 +94,47 @@ void main(in string[] args){
     {
       double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
       double[] pi0;
-      pi0 ~= 0.0;
+      double[] pi0Est = new double[lambda.length];
+
+      pi0 ~= map!(a => pVals[a])(orderIndex)
+	.assumeSorted
+	.lowerBound(lambda[0])
+	.length;
 
       foreach(ref e; 1..lambda.length)
-	pi0 ~= pi0[$ -1 ] + map!(a=>pVals[a])(orderIndex[cast(size_t)pi0[$-1]..$])
+	pi0 ~= pi0[$ - 1] + map!(a => pVals[a])(orderIndex[cast(size_t)pi0[$ - 1]..$])
 	  .assumeSorted
 	  .lowerBound(lambda[e])
 	  .length;
+
       foreach(i, ref e; pi0)
 	e = (pVals.length - e) / (1 - lambda[i]) / pVals.length;
-      if (opts.smoother){
-	foreach(ref e; pi0)
-	  e = log(e);
-      }
-      double[] pi0Est = new double[lambda.length];
-      spline_fit(lambda.ptr, pi0.ptr, pi0Est.ptr, lambda.length, opts.ncoeff);
-      if (opts.smoother){
-	foreach(ref e; pi0)
-	  e = exp(e);
-	foreach(ref e; pi0Est)
-	  e = exp(e);
-      }
+
+      if(lambda.length != 1)
+	{
+	  if (opts.smoother)
+	      foreach(ref e; pi0)
+		e = log(e);
+
+	  spline_fit(lambda.ptr, pi0.ptr, pi0Est.ptr, lambda.length, opts.ncoeff);
+
+	  if (opts.smoother)
+	    {
+	      foreach(ref e; pi0)
+		e = exp(e);
+	      foreach(ref e; pi0Est)
+		e = exp(e);
+	    }
+	}
+      else
+	pi0Est[0] = pi0[0];
 
       pi0Final = min(pi0Est[$ - 1], 1);
       if (opts.writeParam)
 	{
 	  paramFile.writeln("#The estimated value of ",to!dchar(0x03C0),"0 is:         ", pi0Final, "\n");
 	  paramFile.writeln(
-			    to!dchar(0x03BB), " values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
+			    "#", to!dchar(0x03BB), " values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
 			    "#with the corresponding ", to!dchar(0x03C0), "0 values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
 			    "#and spline-smoothed ", to!dchar(0x03C0), "0 values:        [", join(to!(string[])(pi0Est), ", "), "]\n");
 	  paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of ", to!dchar(0x03C0),"0\n");
@@ -150,15 +161,12 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
 
   double[] qVal;
   if (opts.robust)
-    {
-  foreach(i, ref e; pVals)
-    qVal ~= pi0Final * e * pVals.length / (bestIndex[i] * (1 - pow(1 - e, pVals.length)));
-    }
+      foreach(i, ref e; pVals)
+	qVal ~= pi0Final * e * pVals.length / (bestIndex[i] * (1 - pow(1 - e, pVals.length)));
   else
-    {
       foreach(i, ref e; pVals)
 	qVal ~= pi0Final * e * pVals.length / bestIndex[i];
-    }
+
   qVal[orderIndex[$-1]] = qVal[orderIndex[$ - 1]] > 1 ? 1 : qVal[orderIndex[$ - 1]];
 
   foreach(ref e; iota(qVal.length - 2, 0, -1))
@@ -174,12 +182,12 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
   foreach(ref line; inFile.byLine)
     {
       auto splitLine = line.split;
-	  try{
-	    to!double(splitLine[opts.col - 1]);
-	    outFile.writeln(line, "\t", qVal[i]);
-	    i++;
-	  } catch (ConvException e){
-	    outFile.writeln(line, "\tNA");
-	  }
+      try{
+	to!double(splitLine[opts.col - 1]);
+	outFile.writeln(line, "\t", qVal[i]);
+	i++;
+      } catch (ConvException e){
+	outFile.writeln(line, "\tNA");
+      }
     }
 }
