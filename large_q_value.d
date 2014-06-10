@@ -30,6 +30,26 @@ pure size_t[] bestRank(in double[] rankArray, ref size_t[] orderIndex){
   return bestIndex;
 }
 
+size_t lowerSearch(size_t[] order, ref double[] values, double value){
+  size_t offset = 0;
+  while (!order.empty)
+    {
+      auto i = order.length / 2;
+      auto mid = values[order[i]];
+      if (mid > value)
+	order = order[0 .. i];
+      else if (mid < value && ((i == order.length - 1) || values[order[i + 1]] >= value))
+	return i + 1 + offset;
+      else
+	{
+	  order = order[i + 1 .. $];
+	  offset += i + 1;
+	}
+    }
+  return 0;
+}
+
+
 void main(in string[] args){
 
   Opts opts = new Opts(cast(string[])args);
@@ -93,14 +113,10 @@ void main(in string[] args){
       double[] pi0;
       double[] pi0Est = new double[lambda.length];
 
-      pi0 ~= map!(a => pVals[a])(orderIndex).assumeSorted
-	                                    .lowerBound(lambda[0])
-	                                    .length;
+      pi0 ~= lowerSearch(orderIndex, pVals, lambda[0]);
 
       foreach(ref e; 1..lambda.length)
-	pi0 ~= pi0[$ - 1] + map!(a => pVals[a])(orderIndex[cast(size_t)pi0[$ - 1]..$]).assumeSorted
-	                                                                              .lowerBound(lambda[e])
-	                                                                              .length;
+	pi0 ~= pi0[$ - 1] + lowerSearch(orderIndex[cast(size_t)pi0[$ - 1] .. $], pVals, lambda[e]);
 
       foreach(i, ref e; pi0)
 	e = (pVals.length - e) / (1 - lambda[i]) / pVals.length;
