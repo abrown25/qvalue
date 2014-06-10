@@ -12,22 +12,26 @@ extern (C) {
   void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff);
 }
 
-pure size_t[] bestRank(in double[] rankArray, ref size_t[] orderIndex){
-  immutable size_t len = rankArray.length;
-  auto bestIndex = new size_t[len];
+pure double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double pi0, bool robust){
+  immutable size_t len = pVal.length;
+  auto qVal = new double[len];
   size_t dupcount = 0;
 
   foreach(i, ref e; orderIndex)
     {
       dupcount++;
-      if (i == (len - 1) || fabs(rankArray[e]) < fabs(rankArray[orderIndex[i + 1]]))
+      if (i == (len - 1) || fabs(pVal[e]) < fabs(pVal[orderIndex[i + 1]]))
 	{
 	  foreach(ref j; orderIndex[(i - dupcount + 1)..(i + 1)])
-	    bestIndex[j] = i + 1;
+	    if (robust)
+	      qVal[j] = pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[j], len)));
+	    else
+	      qVal[j] = pi0 * pVal[j] * len / (i + 1);
 	  dupcount = 0;
 	}
     }
-  return bestIndex;
+
+  return qVal;
 }
 
 size_t lowerSearch(size_t[] order, ref double[] values, double value){
@@ -179,18 +183,7 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
 	paramFile.writeln("Using specified value of ", to!dchar(0x03C0), "0 = ", pi0Final);
     }
 
-  double[] qVal;
-
-  size_t[] bestIndex =  bestRank(pVals, orderIndex);
-
-  if (opts.robust)
-    qVal = map!(a => pi0Final * pVals[a] * pVals.length / (bestIndex[a] * (1 - pow(1 - pVals[a], pVals.length))))
-               (iota(0, pVals.length))
-               .array;
-  else
-    qVal = map!(a => pi0Final * pVals[a] * pVals.length / bestIndex[a])
-               (iota(0, pVals.length))
-               .array;
+  double[] qVal = pValtoQ(pVals, orderIndex, pi0Final, opts.robust);
 
   qVal[orderIndex[$-1]] = qVal[orderIndex[$ - 1]] > 1 ? 1 : qVal[orderIndex[$ - 1]];
 
