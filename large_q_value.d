@@ -53,6 +53,10 @@ pure nothrow size_t lowerSearch(size_t[] order, ref double[] values, double valu
 
 
 void main(in string[] args){
+    if (args.length==1){
+      writeln(helpString);
+      exit(0);
+    }
 
   Opts opts = new Opts(cast(string[])args);
 
@@ -154,11 +158,11 @@ void main(in string[] args){
 
       if (opts.writeParam)
 	{
-	  paramFile.writeln("#The estimated value of \u03C00 is:         ", pi0Final, "\n");
-	  paramFile.writeln("#\u03BB values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
-			    "#with the corresponding \u03C00 values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
-			    "#and spline-smoothed \u03C00 values:        [", join(to!(string[])(pi0Est), ", "), "]\n");
-	  paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of ", to!dchar(0x03C0),"0\n
+	  paramFile.writeln("#The estimated value of pi0 is:             ", pi0Final, "\n");
+	  paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
+			    "#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
+			    "#and spline-smoothed pi0 values:            [", join(to!(string[])(pi0Est), ", "), "]\n");
+	  paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0\n
 data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
                    pi0 = c(", join(to!(string[])(pi0), ", "), "),
                    pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");

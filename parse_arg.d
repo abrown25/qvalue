@@ -45,10 +45,6 @@ class Opts{
   string outF = "";
 
   this(string[] args){
-    if (args.length==0){
-      writeln(helpString);
-      exit(0);
-    }
 
     try{
       getopt(
