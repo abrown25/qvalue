@@ -6,6 +6,14 @@ Given a whitespace separated table (specified by --input or as the last option o
 
 This program uses a different spline fitting algorithm to that used by the qvalue package. If exact replication of qvalue results is need, then this can be produced by running the program twice. First, run the code with the --param flag specified. Paste the parameter output into R and then run the program again, this time specifying pi0 with the --pi0 flag.
 
+### Binaries
+
+Latest binaries for 64bit linux can be found here:
+
+https://www.dropbox.com/s/re88vqip06lwy5c/large_q_value (version compiled with reference compiler, DMD)
+
+https://www.dropbox.com/s/2tain9x877l7yyg/large_q_value_ldc (version compile with ldc, runs much faster)
+
 ### Example command:
 
 ./large_q_value --header --col 4 --out output --param parameter_file --lambda 0,0.9,0.05 --robust QTLresults.txt
