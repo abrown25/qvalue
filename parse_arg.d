@@ -14,7 +14,6 @@ Options:
     --header   : Input has header line
     --smoother : Smoothing spline applied to log pi0 values
     --robust   : More robust values for small p values
-    --boot     : Bootstrap pi0 estimate
     --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05
     --param    : Print out parameter list to given file
@@ -34,7 +33,6 @@ class Opts{
   bool writeParam = false;
   bool smoother = false;
   bool robust = false;
-  bool boot = false;
   double pi0;
   string lambda = "0,0.9,0.05";
   double lambdaStart;
@@ -59,7 +57,6 @@ class Opts{
 	     "header", &header,
 	     "smoother", &smoother,
 	     "robust", &robust,
-	     "boot", &boot,
 	     "pi0", &pi0,
 	     "lambda", &lambda,
 	     "coef", &ncoeff,

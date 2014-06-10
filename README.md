@@ -12,10 +12,6 @@ This program uses a different spline fitting algorithm to that used by the qvalu
 
 The p values can be found in the 4th column of QTLresults.txt, write the results to output and the estimated parameter values to parameter_file. Use values of lambda from 0 to 0.9 in steps of 0.05 to estimate proportion of null hypotheses (standard settings in qvalue) and produce estimates of q values robust for small p values.
 
-### Issues:
-
-the bootstrap option gives the wrong answers as the sampling procedure is not correct.
-
 ### List of options:
 
 Usage: large_q_value [options]
@@ -26,7 +22,6 @@ Options:
     --header : Input has header line
     --smoother : Smoothing spline applied to log pi0 values
     --robust : More robust values for small p values
-    --boot : Bootstrap pi0 estimate
     --pi0 : Use value of pi0 given (useful for recreating qvalue package results)
     --lambda : Either a fixed number or a sequence given 0,0.9,0.05 (used to estimate pi0)
     --param : Print out parameter list to given file
