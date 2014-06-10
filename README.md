@@ -20,6 +20,7 @@ the bootstrap option gives the wrong answers as the sampling procedure is not co
 
 Usage: large_q_value [options]
 Options:
+```
     --help : Print help and quit
     --header : Input has header line
     --smoother : Smoothing spline applied to log pi0 values
@@ -31,3 +32,4 @@ Options:
     --out : file to write results to (default stdout)
     --input : file to take results from (must be specified, cannot be taken from stdin. If not given with flag, then last parameter remaining after all flagged options have been parsed is used)
     --col : column with p values (default 1)
+```
