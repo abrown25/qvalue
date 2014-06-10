@@ -1,12 +1,12 @@
 module parse_arg;
 
-import std.getopt;
-import std.conv : to, ConvException;
 import std.array : split;
-import std.math : isNaN;
-import std.stdio;
 import std.c.stdlib : exit;
+import std.conv : to, ConvException;
 import std.exception : enforce;
+import std.getopt;
+import std.math : isNaN;
+import std.stdio : writeln;
 
 static immutable string helpString = "Usage: large_q_value [options]
 Options:

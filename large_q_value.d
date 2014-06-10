@@ -1,18 +1,16 @@
-import std.c.stdlib : exit;
-import std.stdio;
-import std.conv;
-import std.array;
-import std.algorithm : find, makeIndex, reduce;
+import std.algorithm : makeIndex;
+import std.math : fabs, fmin, log, exp, pow;
 import std.range;
+import std.stdio;
 import std.string : chomp;
-import std.math : fabs, isNaN, log, exp, pow;
+
 import parse_arg;
 
 extern (C) {
   void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff);
 }
 
-pure double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double pi0, bool robust){
+pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double pi0, bool robust){
   immutable size_t len = pVal.length;
   auto qVal = new double[len];
   size_t dupcount = 0;
@@ -34,7 +32,7 @@ pure double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double pi0, boo
   return qVal;
 }
 
-size_t lowerSearch(size_t[] order, ref double[] values, double value){
+pure nothrow size_t lowerSearch(size_t[] order, ref double[] values, double value){
   size_t offset = 0;
   while (!order.empty)
     {
@@ -144,7 +142,7 @@ void main(in string[] args){
       else
 	pi0Est[0] = pi0[0];
 
-      pi0Final = min(pi0Est[$ - 1], 1);
+      pi0Final = fmin(pi0Est[$ - 1], 1);
 
       try{
 	enforce(pi0Final > 0,
@@ -156,17 +154,16 @@ void main(in string[] args){
 
       if (opts.writeParam)
 	{
-	  paramFile.writeln("#The estimated value of ",to!dchar(0x03C0),"0 is:         ", pi0Final, "\n");
-	  paramFile.writeln(
-			    "#", to!dchar(0x03BB), " values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
-			    "#with the corresponding ", to!dchar(0x03C0), "0 values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
-			    "#and spline-smoothed ", to!dchar(0x03C0), "0 values:        [", join(to!(string[])(pi0Est), ", "), "]\n");
-	  paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of ", to!dchar(0x03C0),"0\n");
-	  paramFile.writeln("data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
+	  paramFile.writeln("#The estimated value of \u03C00 is:         ", pi0Final, "\n");
+	  paramFile.writeln("#\u03BB values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
+			    "#with the corresponding \u03C00 values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
+			    "#and spline-smoothed \u03C00 values:        [", join(to!(string[])(pi0Est), ", "), "]\n");
+	  paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of ", to!dchar(0x03C0),"0\n
+data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
                    pi0 = c(", join(to!(string[])(pi0), ", "), "),
                    pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
-	  paramFile.writeln("qvalEst = smooth.spline(data$lambda, data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required
-print(paste(c(\"Estimate of pi0 from qvalue package is\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
+	  paramFile.writeln("qvalEst = smooth.spline(data$lambda, data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
+print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
 	  paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");
 
 	  paramFile.writeln("library(ggplot2)
