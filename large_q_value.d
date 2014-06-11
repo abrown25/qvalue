@@ -28,35 +28,15 @@ pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double 
 	  dupcount = 0;
 	}
     }
-
   return qVal;
 }
 
-pure nothrow size_t lowerSearch(size_t[] order, ref double[] values, double value){
-  size_t offset = 0;
-  while (!order.empty)
-    {
-      auto i = order.length / 2;
-      auto mid = values[order[i]];
-      if (mid > value)
-	order = order[0 .. i];
-      else if (mid < value && ((i == order.length - 1) || values[order[i + 1]] >= value))
-	return i + 1 + offset;
-      else
-	{
-	  order = order[i + 1 .. $];
-	  offset += i + 1;
-	}
-    }
-  return 0;
-}
-
-
 void main(in string[] args){
-    if (args.length==1){
-      writeln(helpString);
-      exit(0);
-    }
+    if (args.length==1)
+      {
+	writeln(helpString);
+	exit(0);
+      }
 
   Opts opts = new Opts(cast(string[])args);
 
@@ -117,15 +97,22 @@ void main(in string[] args){
     {
       double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
       double[] pi0;
+      size_t[] pi0Count;
       double[] pi0Est = new double[lambda.length];
 
-      pi0 ~= lowerSearch(orderIndex, pVals, lambda[0]);
+      pi0Count ~= pVals.indexed(orderIndex)
+                       .assumeSorted
+                       .lowerBound(lambda[0])
+                       .length;
 
-      foreach(ref e; 1..lambda.length)
-	pi0 ~= pi0[$ - 1] + lowerSearch(orderIndex[cast(size_t)pi0[$ - 1] .. $], pVals, lambda[e]);
+      foreach(ref e; 1 .. lambda.length)
+	pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
+                                           .assumeSorted
+	                                   .lowerBound(lambda[e])
+	                                   .length;
 
-      foreach(i, ref e; pi0)
-	e = (pVals.length - e) / (1 - lambda[i]) / pVals.length;
+      foreach(i, ref e; pi0Count)
+	pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
 
       if(lambda.length != 1)
 	{

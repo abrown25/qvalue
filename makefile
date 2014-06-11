@@ -1,10 +1,12 @@
+GSL = /usr/lib/libgsl.a /usr/lib/libgslcblas.a
+
 large_q_value : spline.c large_q_value.d parse_arg.d
 	gcc -c spline.c -o spline.o
-	dmd large_q_value.d parse_arg.d spline.o -L-lgsl -L-lgslcblas
+	dmd large_q_value.d parse_arg.d spline.o ${GSL}
 
 ldc :  spline.c large_q_value.d parse_arg.d
 	gcc -c spline.c -o spline.o
-	ldc2 large_q_value.d parse_arg.d spline.o -L-lgsl -L-lgslcblas -O3 -of="large_q_value_ldc"
+	ldc2 large_q_value.d parse_arg.d spline.o ${GSL} -O3 -of="large_q_value_ldc"
 
 .PHONY : sample clean
 
