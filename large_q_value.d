@@ -1,7 +1,8 @@
-import std.algorithm : makeIndex;
-import std.math : fabs, fmin, log, exp, pow;
-import std.range;
-import std.stdio;
+import std.algorithm : assumeSorted, makeIndex, reverse;
+import std.array : array, join;
+import std.math : exp, fabs, fmin, log, pow;
+import std.range : indexed, iota, zip;
+import std.stdio : File, stdout;
 import std.string : chomp;
 
 import parse_arg;
@@ -32,11 +33,11 @@ pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double 
 }
 
 void main(in string[] args){
-    if (args.length==1)
-      {
-	writeln(helpString);
-	exit(0);
-      }
+  if (args.length==1)
+    {
+      writeln(helpString);
+      exit(0);
+    }
 
   Opts opts = new Opts(cast(string[])args);
 
@@ -101,15 +102,15 @@ void main(in string[] args){
       double[] pi0Est = new double[lambda.length];
 
       pi0Count ~= pVals.indexed(orderIndex)
-                       .assumeSorted
-                       .lowerBound(lambda[0])
-                       .length;
+	.assumeSorted
+	.lowerBound(lambda[0])
+	.length;
 
       foreach(ref e; 1 .. lambda.length)
 	pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
-                                           .assumeSorted
-	                                   .lowerBound(lambda[e])
-	                                   .length;
+	  .assumeSorted
+	  .lowerBound(lambda[e])
+	  .length;
 
       foreach(i, ref e; pi0Count)
 	pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
@@ -173,11 +174,14 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
 
   double[] qVal = pValtoQ(pVals, orderIndex, pi0Final, opts.robust);
 
-  qVal[orderIndex[$-1]] = qVal[orderIndex[$ - 1]] > 1 ? 1 : qVal[orderIndex[$ - 1]];
+  reverse(orderIndex);
 
-  foreach(ref e; iota(qVal.length - 2, 0, -1))
-    qVal[orderIndex[e]] = qVal[orderIndex[e]] > qVal[orderIndex[e + 1]] ? qVal[orderIndex[e + 1]]
-                                                                        : qVal[orderIndex[e]];
+  if (qVal[orderIndex[0]] > 1)
+    qVal[orderIndex[0]] = 1;
+
+  foreach(ref e; zip(orderIndex[1..$], orderIndex[0..($-1)]))
+    if (qVal[e[0]] > qVal[e[1]])
+      qVal[e[0]] = qVal[e[1]];
 
   inFile.seek(0);
 
@@ -197,3 +201,4 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
       }
     }
 }
+
