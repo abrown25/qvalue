@@ -10,9 +10,9 @@ This program uses a different spline fitting algorithm to that used by the qvalu
 
 Latest binaries for 64bit linux can be found here:
 
-https://www.dropbox.com/s/re88vqip06lwy5c/large_q_value (version compiled with reference compiler, DMD)
+https://www.dropbox.com/sh/57gis7mthuc5l2k/AADMIu6MhTzhGFCOWewr-YtIa/large_q_value (version compiled with reference compiler, DMD)
 
-https://www.dropbox.com/s/2tain9x877l7yyg/large_q_value_ldc (version compile with ldc, runs much faster)
+https://www.dropbox.com/sh/57gis7mthuc5l2k/AAA1QqYIlGEqogbIrhTpN-Pwa/large_q_value_ldc (version compile with ldc, runs much faster)
 
 ### Example command:
 

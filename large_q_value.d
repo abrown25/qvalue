@@ -68,7 +68,7 @@ void main(in string[] args){
     {
       auto splitLine = line.split;
       try{
-	enforce(splitLine.length > opts.col -1,
+	enforce(splitLine.length > opts.col - 1,
 		new InputException("Column with p values doesn't exist"));
 	pVals ~= to!double(splitLine[opts.col - 1]);
       } catch (ConvException e) {
@@ -179,9 +179,13 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
   if (qVal[orderIndex[0]] > 1)
     qVal[orderIndex[0]] = 1;
 
-  foreach(ref e; zip(orderIndex[1..$], orderIndex[0..($-1)]))
-    if (qVal[e[0]] > qVal[e[1]])
-      qVal[e[0]] = qVal[e[1]];
+  foreach(ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
+    {
+      if (qVal[e[1]] > qVal[e[0]])
+	qVal[e[1]] = qVal[e[0]];
+      if (qVal[e[1]] > 1)
+	qVal[e[1]] = 1;
+    }
 
   inFile.seek(0);
 
