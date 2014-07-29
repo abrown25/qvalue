@@ -2,6 +2,23 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <stdio.h>
+
+size_t genBinom(double p, size_t n){
+  const gsl_rng_type * T;
+  gsl_rng * r;
+  size_t out;
+  gsl_rng_env_setup();
+
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
+  gsl_rng_set(r, 123);
+
+  out = gsl_ran_binomial (r, p, n);
+  gsl_rng_free (r);
+
+  return out;
+}
 
 void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff)
 {

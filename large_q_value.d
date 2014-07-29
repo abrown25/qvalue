@@ -6,9 +6,127 @@ import std.stdio : File, stdout;
 import std.string : chomp;
 
 import parse_arg;
-
+extern (C) {
+  size_t genBinom( double p, size_t n);
+}
 extern (C) {
   void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff);
+}
+
+double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
+  import std.stdio;
+  import std.algorithm;
+  double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
+  double[] pi0;
+  size_t[] pi0Count;
+
+  pi0Count ~= pVals.indexed(orderIndex)
+    .assumeSorted
+    .lowerBound(lambda[0])
+    .length;
+
+  foreach(ref e; 1 .. lambda.length)
+    pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
+      .assumeSorted
+      .lowerBound(lambda[e])
+      .length;
+
+  writeln(pi0Count);
+  size_t runningTotal = pVals.length;
+  double correctP = 1.0;
+  size_t[] bootCount;
+  double[] probs;
+
+  probs ~= cast(double)pi0Count[0] / runningTotal;
+  foreach(e; zip(pi0Count[0..($ - 1)], pi0Count[1..$]))  
+    probs ~= cast(double)(e[1] - e[0]) / pVals.length;
+
+  foreach(ref e; probs)
+    {
+      bootCount ~= genBinom(e / correctP, runningTotal);
+      correctP -= e;
+      runningTotal -= bootCount[$ - 1];
+    }
+
+  foreach(ref e; zip(bootCount[0..($ - 1)], bootCount[1..$]))  
+    e[1] += e[0];
+
+  writeln(bootCount);
+  foreach(i, ref e; pi0Count)
+    pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
+  return pi0[0];
+}
+
+double getSmootherPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
+  double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
+  double[] pi0;
+  size_t[] pi0Count;
+  double[] pi0Est = new double[lambda.length];
+
+  pi0Count ~= pVals.indexed(orderIndex)
+    .assumeSorted
+    .lowerBound(lambda[0])
+    .length;
+
+  foreach(ref e; 1 .. lambda.length)
+    pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
+      .assumeSorted
+      .lowerBound(lambda[e])
+      .length;
+
+  foreach(i, ref e; pi0Count)
+    pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
+
+  if(lambda.length != 1)
+    {
+      if (opts.smoother)
+	foreach(ref e; pi0)
+	  e = log(e);
+
+      splineFit(lambda.ptr, pi0.ptr, pi0Est.ptr, lambda.length, opts.ncoeff);
+
+      if (opts.smoother)
+	{
+	  foreach(ref e; pi0)
+	    e = exp(e);
+	  foreach(ref e; pi0Est)
+	    e = exp(e);
+	}
+    }
+  else
+    pi0Est[0] = pi0[0];
+
+  double pi0Final = fmin(pi0Est[$ - 1], 1);
+
+  try{
+    enforce(pi0Final > 0,
+	    new InputException("Pi0 estimate is <= 0"));
+  } catch (InputException e) {
+    writeln(e.msg);
+    exit(0);
+  }
+
+  if (opts.writeParam)
+    {
+      paramFile.writeln("#The estimated value of pi0 is:             ", pi0Final, "\n");
+      paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
+			"#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
+			"#and spline-smoothed pi0 values:            [", join(to!(string[])(pi0Est), ", "), "]\n");
+      paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0\n
+data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
+                   pi0 = c(", join(to!(string[])(pi0), ", "), "),
+                   pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
+      paramFile.writeln("qvalEst = smooth.spline(data$lambda, data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
+print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
+      paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");
+
+      paramFile.writeln("library(ggplot2)
+ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
+                                                geom_line(aes(x = lambda, y = pi0Est)) +
+                                                geom_abline(slope = 0, intercept = data$pi0Est[nrow(data)], col = 'red')
+");
+    }
+  return pi0Final;
 }
 
 pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double pi0, bool robust){
@@ -93,84 +211,16 @@ void main(in string[] args){
   makeIndex!("a<b")(pVals, orderIndex);
 
   double pi0Final;
-
+  pi0Final = getBootPi0(opts, pVals, orderIndex, paramFile);
   if (opts.pi0.isNaN)
-    {
-      double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
-      double[] pi0;
-      size_t[] pi0Count;
-      double[] pi0Est = new double[lambda.length];
-
-      pi0Count ~= pVals.indexed(orderIndex)
-	.assumeSorted
-	.lowerBound(lambda[0])
-	.length;
-
-      foreach(ref e; 1 .. lambda.length)
-	pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
-	  .assumeSorted
-	  .lowerBound(lambda[e])
-	  .length;
-
-      foreach(i, ref e; pi0Count)
-	pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
-
-      if(lambda.length != 1)
-	{
-	  if (opts.smoother)
-	    foreach(ref e; pi0)
-	      e = log(e);
-
-	  splineFit(lambda.ptr, pi0.ptr, pi0Est.ptr, lambda.length, opts.ncoeff);
-
-	  if (opts.smoother)
-	    {
-	      foreach(ref e; pi0)
-		e = exp(e);
-	      foreach(ref e; pi0Est)
-		e = exp(e);
-	    }
-	}
-      else
-	pi0Est[0] = pi0[0];
-
-      pi0Final = fmin(pi0Est[$ - 1], 1);
-
-      try{
-	enforce(pi0Final > 0,
-		new InputException("Pi0 estimate is <= 0"));
-      } catch (InputException e) {
-	writeln(e.msg);
-	exit(0);
-      }
-
-      if (opts.writeParam)
-	{
-	  paramFile.writeln("#The estimated value of pi0 is:             ", pi0Final, "\n");
-	  paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
-			    "#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
-			    "#and spline-smoothed pi0 values:            [", join(to!(string[])(pi0Est), ", "), "]\n");
-	  paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0\n
-data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
-                   pi0 = c(", join(to!(string[])(pi0), ", "), "),
-                   pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
-	  paramFile.writeln("qvalEst = smooth.spline(data$lambda, data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
-print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
-	  paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");
-
-	  paramFile.writeln("library(ggplot2)
-ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
-                                                geom_line(aes(x = lambda, y = pi0Est)) +
-                                                geom_abline(slope = 0, intercept = data$pi0Est[nrow(data)], col = 'red')
-");
-	}
-    }
+    pi0Final = getSmootherPi0(opts, pVals, orderIndex, paramFile);
   else
     {
       pi0Final = opts.pi0;
       if (opts.writeParam)
 	paramFile.writeln("Using specified value of ", to!dchar(0x03C0), "0 = ", pi0Final);
     }
+
 
   double[] qVal = pValtoQ(pVals, orderIndex, pi0Final, opts.robust);
 
@@ -205,4 +255,3 @@ ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
       }
     }
 }
-
