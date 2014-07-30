@@ -2,9 +2,9 @@
 
 This is an implementation of the qvalue package (Alan Dabney, John D. Storey and with assistance from Gregory R. Warnes (). qvalue: Q-value estimation for false discovery rate control. R package version 1.34.0.) which is designed for use with large datasets where memory or computation time may be an issue with R.
 
-Given a whitespace separated table (specified by --input or as the last option on the command line) and a column number (--col, default = 1), the program will write a new file where the equivalent q values are in the last column. The --param flag specifies a file to write parameter values calculated to estimate these q values, this file can be copied and pasted into R to produce diagnostic plots.
+Given a whitespace separated table (specified by --input or as the last option on the command line) and a column number (--col, default = 1), the program will write a new file where the equivalent q values are in the last column. The --param flag specifies a file to write parameter values used to estimate these q values, this file can be copied and pasted into R to produce diagnostic plots.
 
-This program uses a different spline fitting algorithm to that used by the qvalue package. If exact replication of qvalue results is need, then this can be produced by running the program twice. First, run the code with the --param flag specified. Paste the parameter output into R and then run the program again, this time specifying pi0 with the --pi0 flag.
+This program uses a different spline fitting algorithm to that used by the qvalue package. If exact replication of qvalue results is needed, then this can be produced by running the program twice. First, run the code with the --param flag specified. Paste the parameter output into R and then run the program again, this time specifying pi0 with the --pi0 flag.
 
 ### Binaries
 
@@ -26,14 +26,15 @@ Usage: large_q_value [options]
 Options:
 
 ```
-    --help : Print help and quit
-    --header : Input has header line
+    --help     : Print help and quit
+    --header   : Input has header line
+    --boot     : Apply bootstrap method to estimate pi0
     --smoother : Smoothing spline applied to log pi0 values
-    --robust : More robust values for small p values
-    --pi0 : Use value of pi0 given (useful for recreating qvalue package results)
-    --lambda : Either a fixed number or a sequence given 0,0.9,0.05 (used to estimate pi0)
-    --param : Print out parameter list to given file
-    --out : file to write results to (default stdout)
-    --input : file to take results from (must be specified, cannot be taken from stdin. If not given with flag, then last parameter remaining after all flagged options have been parsed is used)
-    --col : column with p values (default 1)
+    --robust   : More robust values for small p values
+    --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
+    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (used to estimate pi0)
+    --param    : Print out parameter list to given file
+    --out      : file to write results to (default stdout)
+    --input    : file to take results from (must be specified, cannot be taken from stdin. If not given with flag, then last parameter remaining after all flagged options have been parsed is used)
+    --col      : column with p values (default 1)
 ```

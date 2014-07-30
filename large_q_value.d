@@ -1,21 +1,21 @@
-import std.algorithm : assumeSorted, makeIndex, reverse;
+import std.algorithm : assumeSorted, makeIndex, min, reduce, reverse;
 import std.array : array, join;
 import std.math : exp, fabs, fmin, log, pow;
-import std.range : indexed, iota, zip;
+import std.range : chunks, indexed, iota, zip;
 import std.stdio : File, stdout;
 import std.string : chomp;
 
 import parse_arg;
+
 extern (C) {
-  size_t genBinom( double p, size_t n);
+  void bootSample(size_t* bootCount, double* probs, size_t runningTotal, size_t countSize);
 }
+
 extern (C) {
   void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff);
 }
 
 double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
-  import std.stdio;
-  import std.algorithm;
   double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
   double[] pi0;
   size_t[] pi0Count;
@@ -31,30 +31,53 @@ double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File par
       .lowerBound(lambda[e])
       .length;
 
-  writeln(pi0Count);
-  size_t runningTotal = pVals.length;
-  double correctP = 1.0;
-  size_t[] bootCount;
-  double[] probs;
+  foreach(i, ref e; pi0Count)
+    pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
+  double minP = pi0.reduce!min;
 
-  probs ~= cast(double)pi0Count[0] / runningTotal;
+  double[] probs;
+  probs ~= cast(double)pi0Count[0] / pVals.length;
   foreach(e; zip(pi0Count[0..($ - 1)], pi0Count[1..$]))  
     probs ~= cast(double)(e[1] - e[0]) / pVals.length;
 
-  foreach(ref e; probs)
+  size_t[] bootCount = new size_t[lambda.length * 100];
+  double[] bootPi0;
+
+  bootSample(bootCount.ptr, probs.ptr, pVals.length, lambda.length);
+  foreach(ref e; chunks(bootCount, lambda.length))
+    foreach(i, ref f; e)
+      bootPi0 ~= (pVals.length - f) / (1 - lambda[i]) / pVals.length;
+
+  double[] mse = new double[lambda.length];
+  mse[] = 0.0;
+
+  foreach(ref e; chunks(bootPi0, lambda.length))
+    foreach(i, ref f; e)
+      mse[i] += pow(f - minP, 2);
+
+  double minMSE = mse[0];
+  double pi0Final = pi0[0];
+
+  foreach(e; zip(mse[1..$], pi0[1..$]))
     {
-      bootCount ~= genBinom(e / correctP, runningTotal);
-      correctP -= e;
-      runningTotal -= bootCount[$ - 1];
+      if (e[0] < minMSE)
+	{
+	  minMSE = e[0];
+	  pi0Final = e[1];
+	}
+      else if (e[0] == minMSE && e[1] < pi0Final)
+	pi0Final = e[1];
     }
 
-  foreach(ref e; zip(bootCount[0..($ - 1)], bootCount[1..$]))  
-    e[1] += e[0];
-
-  writeln(bootCount);
-  foreach(i, ref e; pi0Count)
-    pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
-  return pi0[0];
+  if (opts.writeParam)
+    {
+      paramFile.writeln("#The estimated value of pi0 is:             ", pi0Final, "\n");
+      paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
+			"#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
+			"#and mean squared error estimates:          [", join(to!(string[])(mse), ", "), "]\n");
+      paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0\n");
+    }
+  return pi0Final;
 }
 
 double getSmootherPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
@@ -113,17 +136,18 @@ double getSmootherPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File
 			"#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
 			"#and spline-smoothed pi0 values:            [", join(to!(string[])(pi0Est), ", "), "]\n");
       paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0\n
-data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
+plot.data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
                    pi0 = c(", join(to!(string[])(pi0), ", "), "),
                    pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
-      paramFile.writeln("qvalEst = smooth.spline(data$lambda, data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
+      paramFile.writeln("qvalEst = smooth.spline(plot.data$lambda, plot.data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
 print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
       paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");
 
       paramFile.writeln("library(ggplot2)
-ggplot(data = data, aes(x = lambda, y = pi0)) + geom_point() +
-                                                geom_line(aes(x = lambda, y = pi0Est)) +
-                                                geom_abline(slope = 0, intercept = data$pi0Est[nrow(data)], col = 'red')
+ggplot(data = plot.data, aes(x = lambda, y = pi0)) + ylim(0, 1) +
+                                                     geom_point() +
+                                                     geom_line(aes(x = lambda, y = pi0Est)) +
+                                                     geom_abline(slope = 0, intercept = plot.data$pi0Est[nrow(plot.data)], col = 'red')
 ");
     }
   return pi0Final;
@@ -211,8 +235,10 @@ void main(in string[] args){
   makeIndex!("a<b")(pVals, orderIndex);
 
   double pi0Final;
-  pi0Final = getBootPi0(opts, pVals, orderIndex, paramFile);
-  if (opts.pi0.isNaN)
+
+  if (opts.boot)
+    pi0Final = getBootPi0(opts, pVals, orderIndex, paramFile);
+  else if (opts.pi0.isNaN)
     pi0Final = getSmootherPi0(opts, pVals, orderIndex, paramFile);
   else
     {
@@ -220,7 +246,6 @@ void main(in string[] args){
       if (opts.writeParam)
 	paramFile.writeln("Using specified value of ", to!dchar(0x03C0), "0 = ", pi0Final);
     }
-
 
   double[] qVal = pValtoQ(pVals, orderIndex, pi0Final, opts.robust);
 

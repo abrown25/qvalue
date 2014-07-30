@@ -12,6 +12,7 @@ static immutable string helpString = "Usage: large_q_value [options]
 Options:
     --help     : Print help and quit
     --header   : Input has header line
+    --boot     : Apply bootstrap method to find pi0
     --smoother : Smoothing spline applied to log pi0 values
     --robust   : More robust values for small p values
     --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
@@ -31,6 +32,7 @@ class Opts{
   bool help = false;
   bool header = false;
   bool writeParam = false;
+  bool boot = false;
   bool smoother = false;
   bool robust = false;
   double pi0;
@@ -51,6 +53,7 @@ class Opts{
 	     args,
 	     "help", &help,
 	     "header", &header,
+	     "boot", &boot,
 	     "smoother", &smoother,
 	     "robust", &robust,
 	     "pi0", &pi0,
