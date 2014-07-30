@@ -8,7 +8,7 @@ import std.string : chomp;
 import parse_arg;
 
 extern (C) {
-  void bootSample(size_t* bootCount, double* probs, size_t runningTotal, size_t countSize);
+  void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize);
 }
 
 extern (C) {
@@ -75,7 +75,8 @@ double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File par
       paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
 			"#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
 			"#and mean squared error estimates:          [", join(to!(string[])(mse), ", "), "]\n");
-      paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0
+      paramFile.writeln("###R code to produce diagnostic plots for bootsrap estimates of pi0
+
 library(ggplot2)");
       paramFile.writeln("plot.pi0.data <- data.frame(x = rep(c(", join(to!(string[])(lambda), ", "), "), 100), y = c(", join(to!(string[])(bootPi0), ", "), "))");
       paramFile.writeln(
@@ -252,7 +253,13 @@ void main(in string[] args){
   }
 
   auto orderIndex = new size_t[pVals.length];
-  makeIndex!("a<b")(pVals, orderIndex);
+  if (opts.issorted)
+    {
+      foreach(i, ref e; orderIndex)
+	e = i;
+    }
+  else
+    makeIndex!("a<b")(pVals, orderIndex);
 
   double pi0Final;
 

@@ -18,9 +18,10 @@ Options:
     --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05
     --param    : Print out parameter list to given file
-    --out      : file to write results to (default stdout)
-    --input    : file to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used)
-    --col      : column with p values (default 1)
+    --out      : File to write results to (default stdout)
+    --input    : File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used)
+    --issorted : File has already been sorted with no missing values
+    --col      : Column with p values (default 1)
 ";
 
 class InputException : Exception {
@@ -35,6 +36,7 @@ class Opts{
   bool boot = false;
   bool smoother = false;
   bool robust = false;
+  bool issorted = false;
   double pi0;
   string lambda = "0,0.9,0.05";
   double lambdaStart;

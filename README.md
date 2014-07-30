@@ -36,5 +36,6 @@ Options:
     --param    : Print out parameter list to given file
     --out      : file to write results to (default stdout)
     --input    : file to take results from (must be specified, cannot be taken from stdin. If not given with flag, then last parameter remaining after all flagged options have been parsed is used)
+    --issorted : File has already been sorted with no missing values
     --col      : column with p values (default 1)
 ```
