@@ -15,7 +15,7 @@ extern (C) {
   void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff);
 }
 
-double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
+double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
   double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
   double[] pi0;
   size_t[] pi0Count;
@@ -33,7 +33,7 @@ double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File par
 
   foreach(i, ref e; pi0Count)
     pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
-  double minP = pi0.reduce!min;
+  immutable double minP = pi0.reduce!min;
 
   double[] probs;
   probs ~= cast(double)pi0Count[0] / pVals.length;
@@ -71,22 +71,24 @@ double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File par
 
   if (opts.writeParam)
     {
-      paramFile.writeln("#The estimated value of pi0 is:             ", pi0Final, "\n");
-      paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
-			"#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
-			"#and mean squared error estimates:          [", join(to!(string[])(mse), ", "), "]\n");
-      paramFile.writeln("###R code to produce diagnostic plots for bootsrap estimates of pi0
-
-library(ggplot2)");
-      paramFile.writeln("plot.pi0.data <- data.frame(x = rep(c(", join(to!(string[])(lambda), ", "), "), 100), y = c(", join(to!(string[])(bootPi0), ", "), "))");
-      paramFile.writeln(
-"plot.data <- data.frame(x = c(", join(to!(string[])(lambda), ", "), "),
+      paramFile.writeln("#The estimated value of π₀ is:            ", pi0Final, "\n");
+      paramFile.writeln("#λ values to calculate this were:         [", join(to!(string[])(lambda), ", "), "]\n\n",
+			"#with the corresponding π₀ values:        [", join(to!(string[])(pi0), ", "), "]\n\n",
+			"#and mean squared error estimates:        [", join(to!(string[])(mse), ", "), "]\n");
+      paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀");
+      paramFile.writeln("
+plot.pi0.data <- data.frame(x = rep(c(", join(to!(string[])(lambda), ", "), "), 100),
+                            y = c(", join(to!(string[])(bootPi0), ", "), "))");
+      paramFile.writeln("
+plot.data <- data.frame(x = c(", join(to!(string[])(lambda), ", "), "),
                         y = c(", join(to!(string[])(pi0), ", "), "),
                         mse = c(", join(to!(string[])(mse), ", "),"),
                         minpi0 = ", minP, ",
                         final = ", pi0Final, ")
-plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_point(colour='blue') +
-                                                geom_boxplot(data = plot.pi0.data, aes(x = x, y = y, group = x)) +
+
+library(ggplot2)
+plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.data, aes(x = x, y = y, group = x)) +
+                                                geom_point(colour='blue') +
                                                 geom_hline(yintercept = plot.data$minpi0, colour = 'blue') +
                                                 geom_line(aes(x = x, y = mse), linetype = 'dashed') +
                                                 geom_hline(yintercept = plot.data$final, colour = 'red') +
@@ -100,7 +102,7 @@ print(plot1)
   return pi0Final;
 }
 
-double getSmootherPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
+double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile){
   double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
   double[] pi0;
   size_t[] pi0Count;
@@ -151,14 +153,14 @@ double getSmootherPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File
 
   if (opts.writeParam)
     {
-      paramFile.writeln("#The estimated value of pi0 is:             ", pi0Final, "\n");
-      paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
-			"#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
-			"#and spline-smoothed pi0 values:            [", join(to!(string[])(pi0Est), ", "), "]\n");
-      paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0\n
+      paramFile.writeln("#The estimated value of π₀ is:         ", pi0Final, "\n");
+      paramFile.writeln("#λ values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
+			"#with the corresponding π₀ values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
+			"#and spline-smoothed π₀ values:        [", join(to!(string[])(pi0Est), ", "), "]\n");
+      paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of π₀\n
 plot.data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
-                   pi0 = c(", join(to!(string[])(pi0), ", "), "),
-                   pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
+                        pi0 = c(", join(to!(string[])(pi0), ", "), "),
+                        pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
       paramFile.writeln("qvalEst = smooth.spline(plot.data$lambda, plot.data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
 print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
       paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");

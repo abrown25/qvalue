@@ -11,7 +11,7 @@ import std.stdio : writeln;
 static immutable string helpString = "Usage: large_q_value [options]
 Options:
     --help     : Print help and quit
-    --version     : Print version and quit
+    --version  : Print version and quit
     --header   : Input has header line (default = FALSE)
     --boot     : Apply bootstrap method to find pi0 (default = FALSE)
     --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
