@@ -75,7 +75,26 @@ double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File par
       paramFile.writeln("#lambda values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
 			"#with the corresponding pi0 values:         [", join(to!(string[])(pi0), ", "), "]\n\n",
 			"#and mean squared error estimates:          [", join(to!(string[])(mse), ", "), "]\n");
-      paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0\n");
+      paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of pi0
+library(ggplot2)");
+      paramFile.writeln("plot.pi0.data <- data.frame(x = rep(c(", join(to!(string[])(lambda), ", "), "), 100), y = c(", join(to!(string[])(bootPi0), ", "), "))");
+      paramFile.writeln(
+"plot.data <- data.frame(x = c(", join(to!(string[])(lambda), ", "), "),
+                        y = c(", join(to!(string[])(pi0), ", "), "),
+                        mse = c(", join(to!(string[])(mse), ", "),"),
+                        minpi0 = ", minP, ",
+                        final = ", pi0Final, ")
+plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_point(colour='blue') +
+                                                geom_boxplot(data = plot.pi0.data, aes(x = x, y = y, group = x)) +
+                                                geom_hline(yintercept = plot.data$minpi0, colour = 'blue') +
+                                                geom_line(aes(x = x, y = mse), linetype = 'dashed') +
+                                                geom_hline(yintercept = plot.data$final, colour = 'red') +
+                                                geom_vline(xintercept = plot.data$x[plot.data$mse==min(plot.data$mse)], linetype = 'dashed') +
+                                                ylim(0,1) +
+                                                labs(x = expression(lambda), y = expression(pi[1])) +
+                                                theme(axis.title = element_text(size = rel(2)))
+print(plot1)
+");
     }
   return pi0Final;
 }
@@ -144,10 +163,11 @@ print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEs
       paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");
 
       paramFile.writeln("library(ggplot2)
-ggplot(data = plot.data, aes(x = lambda, y = pi0)) + ylim(0, 1) +
-                                                     geom_point() +
-                                                     geom_line(aes(x = lambda, y = pi0Est)) +
-                                                     geom_abline(slope = 0, intercept = plot.data$pi0Est[nrow(plot.data)], col = 'red')
+plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
+                                                              geom_line(aes(x = lambda, y = pi0Est)) +
+                                                              geom_abline(slope = 0, intercept = plot.data$pi0Est[nrow(plot.data)], col = 'red') +
+                                                              ylim(0, 1)
+print(plot1)
 ");
     }
   return pi0Final;
