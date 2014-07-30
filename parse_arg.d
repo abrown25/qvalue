@@ -11,18 +11,22 @@ import std.stdio : writeln;
 static immutable string helpString = "Usage: large_q_value [options]
 Options:
     --help     : Print help and quit
-    --header   : Input has header line
-    --boot     : Apply bootstrap method to find pi0
-    --smoother : Smoothing spline applied to log pi0 values
-    --robust   : More robust values for small p values
+    --version     : Print version and quit
+    --header   : Input has header line (default = FALSE)
+    --boot     : Apply bootstrap method to find pi0 (default = FALSE)
+    --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
+    --smoother : Smoothing spline applied to log pi0 values (default = FALSE)
+    --robust   : More robust values for small p values (default = FALSE)
     --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
-    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05
+    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
     --param    : Print out parameter list to given file
-    --out      : File to write results to (default stdout)
+    --out      : File to write results to (default = stdout)
     --input    : File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used)
-    --issorted : File has already been sorted with no missing values
-    --col      : Column with p values (default 1)
+    --issorted : File has already been sorted with no missing values (default = FALSE)
+    --col      : Column with p values (default = 1)
 ";
+
+static immutable string versionString = "large_q_value: version 0.1.2";
 
 class InputException : Exception {
   pure this(string s) {super(s);}
@@ -31,6 +35,7 @@ class InputException : Exception {
 class Opts{
 
   bool help = false;
+  bool version_ = false;
   bool header = false;
   bool writeParam = false;
   bool boot = false;
@@ -44,6 +49,7 @@ class Opts{
   double lambdaStep;
   int ncoeff = 5;
   size_t col = 1;
+  size_t seed;
   string input = "";
   string param = "";
   string outF = "";
@@ -54,6 +60,7 @@ class Opts{
       getopt(
 	     args,
 	     "help", &help,
+	     "version", &version_,
 	     "header", &header,
 	     "boot", &boot,
 	     "smoother", &smoother,
@@ -62,6 +69,7 @@ class Opts{
 	     "lambda", &lambda,
 	     "coef", &ncoeff,
 	     "col", &col,
+	     "seed", &seed,
 	     "input", &input,
 	     "param", &param,
 	     "out", &outF);
@@ -115,9 +123,15 @@ class Opts{
       input = args[$ - 1];
     if (param != "")
       writeParam = true;
-    if(help){
-      writeln(helpString);
-      exit(0);
-    }
+    if(help)
+      {
+	writeln(helpString);
+	exit(0);
+      }
+    if(version_)
+      {
+	writeln(versionString);
+	exit(0);
+      }
   }
 }

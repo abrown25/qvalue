@@ -3,7 +3,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize)
+void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize, size_t seed)
 {
 
   int i, j;
@@ -15,6 +15,8 @@ void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize
 
   T = gsl_rng_default;
   r = gsl_rng_alloc (T);
+
+  gsl_rng_set(r, seed);
 
   size_t left;
   size_t runningTotal;

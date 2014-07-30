@@ -27,15 +27,17 @@ Options:
 
 ```
     --help     : Print help and quit
-    --header   : Input has header line
-    --boot     : Apply bootstrap method to estimate pi0
-    --smoother : Smoothing spline applied to log pi0 values
-    --robust   : More robust values for small p values
+    --version  : Print version and quit
+    --header   : Input has header line (default = FALSE)
+    --boot     : Apply bootstrap method to find pi0 (default = FALSE)
+    --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
+    --smoother : Smoothing spline applied to log pi0 values (default = FALSE)
+    --robust   : More robust values for small p values (default = FALSE)
     --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
-    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (used to estimate pi0)
+    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
     --param    : Print out parameter list to given file
-    --out      : file to write results to (default stdout)
-    --input    : file to take results from (must be specified, cannot be taken from stdin. If not given with flag, then last parameter remaining after all flagged options have been parsed is used)
-    --issorted : File has already been sorted with no missing values
-    --col      : column with p values (default 1)
+    --out      : File to write results to (default = stdout)
+    --input    : File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used)
+    --issorted : File has already been sorted with no missing values (default = FALSE)
+    --col      : Column with p values (default = 1)
 ```

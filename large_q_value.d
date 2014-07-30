@@ -8,7 +8,7 @@ import std.string : chomp;
 import parse_arg;
 
 extern (C) {
-  void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize);
+  void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize, size_t seed);
 }
 
 extern (C) {
@@ -43,7 +43,7 @@ double getBootPi0(Opts opts, in double[] pVals, in size_t[] orderIndex, File par
   size_t[] bootCount = new size_t[lambda.length * 100];
   double[] bootPi0;
 
-  bootSample(bootCount.ptr, probs.ptr, pVals.length, lambda.length);
+  bootSample(bootCount.ptr, probs.ptr, pVals.length, lambda.length, opts.seed);
   foreach(ref e; chunks(bootCount, lambda.length))
     foreach(i, ref f; e)
       bootPi0 ~= (pVals.length - f) / (1 - lambda[i]) / pVals.length;
