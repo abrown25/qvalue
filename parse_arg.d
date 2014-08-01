@@ -15,7 +15,7 @@ Options:
     --header   : Input has header line (default = FALSE)
     --boot     : Apply bootstrap method to find pi0 (default = FALSE)
     --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
-    --smoother : Smoothing spline applied to log pi0 values (default = FALSE)
+    --log      : Smoothing spline applied to log pi0 values (default = FALSE)
     --robust   : More robust values for small p values (default = FALSE)
     --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
@@ -39,7 +39,7 @@ class Opts{
   bool header = false;
   bool writeParam = false;
   bool boot = false;
-  bool smoother = false;
+  bool logSmooth = false;
   bool robust = false;
   bool issorted = false;
   double pi0;
@@ -63,8 +63,9 @@ class Opts{
 	     "version", &version_,
 	     "header", &header,
 	     "boot", &boot,
-	     "smoother", &smoother,
+	     "log", &logSmooth,
 	     "robust", &robust,
+	     "issorted", &issorted,
 	     "pi0", &pi0,
 	     "lambda", &lambda,
 	     "coef", &ncoeff,

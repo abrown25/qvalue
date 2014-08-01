@@ -124,13 +124,13 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
 
   if(lambda.length != 1)
     {
-      if (opts.smoother)
+      if (opts.logSmooth)
 	foreach(ref e; pi0)
 	  e = log(e);
 
       splineFit(lambda.ptr, pi0.ptr, pi0Est.ptr, lambda.length, opts.ncoeff);
 
-      if (opts.smoother)
+      if (opts.logSmooth)
 	{
 	  foreach(ref e; pi0)
 	    e = exp(e);
