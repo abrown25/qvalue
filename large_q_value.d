@@ -21,15 +21,15 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
   size_t[] pi0Count;
 
   pi0Count ~= pVals.indexed(orderIndex)
-    .assumeSorted
-    .lowerBound(lambda[0])
-    .length;
+		   .assumeSorted
+		   .lowerBound(lambda[0])
+		   .length;
 
   foreach(ref e; 1 .. lambda.length)
     pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
-      .assumeSorted
-      .lowerBound(lambda[e])
-      .length;
+				       .assumeSorted
+				       .lowerBound(lambda[e])
+				       .length;
 
   foreach(i, ref e; pi0Count)
     pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
@@ -94,7 +94,7 @@ plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.dat
                                                 geom_hline(yintercept = plot.data$final, colour = 'red') +
                                                 geom_vline(xintercept = plot.data$x[plot.data$mse==min(plot.data$mse)], linetype = 'dashed') +
                                                 ylim(0,1) +
-                                                labs(x = expression(lambda), y = expression(pi[1])) +
+                                                labs(x = expression(lambda), y = expression(pi[0])) +
                                                 theme(axis.title = element_text(size = rel(2)))
 print(plot1)
 ");
@@ -109,15 +109,15 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
   double[] pi0Est = new double[lambda.length];
 
   pi0Count ~= pVals.indexed(orderIndex)
-    .assumeSorted
-    .lowerBound(lambda[0])
-    .length;
+		   .assumeSorted
+		   .lowerBound(lambda[0])
+		   .length;
 
   foreach(ref e; 1 .. lambda.length)
     pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
-      .assumeSorted
-      .lowerBound(lambda[e])
-      .length;
+				       .assumeSorted
+				       .lowerBound(lambda[e])
+				       .length;
 
   foreach(i, ref e; pi0Count)
     pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
@@ -169,6 +169,8 @@ print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEs
 plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
                                                               geom_line(aes(x = lambda, y = pi0Est)) +
                                                               geom_abline(slope = 0, intercept = plot.data$pi0Est[nrow(plot.data)], col = 'red') +
+                                                              labs(x = expression(lambda), y = expression(pi[0])) +
+                                                              theme(axis.title = element_text(size = rel(2))) +
                                                               ylim(0, 1)
 print(plot1)
 ");
@@ -273,7 +275,7 @@ void main(in string[] args){
     {
       pi0Final = opts.pi0;
       if (opts.writeParam)
-	paramFile.writeln("Using specified value of ", to!dchar(0x03C0), "0 = ", pi0Final);
+	paramFile.writeln("Using specified value of π₀ = ", pi0Final);
     }
 
   double[] qVal = pValtoQ(pVals, orderIndex, pi0Final, opts.robust);
@@ -284,12 +286,7 @@ void main(in string[] args){
     qVal[orderIndex[0]] = 1;
 
   foreach(ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
-    {
-      if (qVal[e[1]] > qVal[e[0]])
-	qVal[e[1]] = qVal[e[0]];
-      if (qVal[e[1]] > 1)
-	qVal[e[1]] = 1;
-    }
+    qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
 
   inFile.seek(0);
 

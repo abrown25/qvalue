@@ -14,6 +14,7 @@ Options:
     --version  : Print version and quit
     --header   : Input has header line (default = FALSE)
     --boot     : Apply bootstrap method to find pi0 (default = FALSE)
+    --coef     : Set the number of coefficients used to fit cubic spline (default = 5, must be greater than 3)
     --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
     --log      : Smoothing spline applied to log pi0 values (default = FALSE)
     --robust   : More robust values for small p values (default = FALSE)

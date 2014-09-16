@@ -8,11 +8,9 @@ This program uses a different spline fitting algorithm to that used by the qvalu
 
 ### Binaries
 
-Latest binaries for 64bit linux can be found here:
+Latest binary for 64bit linux can be found here:
 
-https://www.dropbox.com/sh/57gis7mthuc5l2k/AADMIu6MhTzhGFCOWewr-YtIa/large_q_value (version compiled with reference compiler, DMD)
-
-https://www.dropbox.com/sh/57gis7mthuc5l2k/AAA1QqYIlGEqogbIrhTpN-Pwa/large_q_value_ldc (version compile with ldc, runs much faster)
+https://www.dropbox.com/s/re88vqip06lwy5c/large_q_value?dl=0
 
 ### Example command:
 
@@ -30,6 +28,7 @@ Options:
     --version  : Print version and quit
     --header   : Input has header line (default = FALSE)
     --boot     : Apply bootstrap method to find pi0 (default = FALSE)
+    --coef     : Set the number of coefficients used to fit cubic spline (default = 5, must be greater than 3)
     --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
     --log      : Smoothing spline applied to log pi0 values (default = FALSE)
     --robust   : More robust values for small p values (default = FALSE)
