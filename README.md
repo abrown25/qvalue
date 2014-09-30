@@ -1,4 +1,4 @@
-## large_q_value: A program for calculating FDR estimates with large datasets
+## largeQvalue: A program for calculating FDR estimates with large datasets
 
 This is an implementation of the qvalue package (Alan Dabney, John D. Storey and with assistance from Gregory R. Warnes (). qvalue: Q-value estimation for false discovery rate control. R package version 1.34.0.) which is designed for use with large datasets where memory or computation time may be an issue with R. It has been used to analyse full cis scans of gene expression data, with hundreds of millions of P values. A description of the algorithms and instructions for usage can be found here: https://www.dropbox.com/s/isq5n3mqqtraadk/qvalue.pdf?dl=0. 
 
@@ -12,13 +12,13 @@ https://www.dropbox.com/s/re88vqip06lwy5c/large_q_value?dl=0
 
 ### Example command:
 
-./large_q_value --header --col 4 --out output --param parameter_file --lambda 0,0.9,0.05 --robust QTLresults.txt
+./largeQvalue --header --col 4 --out output --param parameter_file --lambda 0,0.9,0.05 --robust QTLresults.txt
 
 The p values can be found in the 4th column of QTLresults.txt, write the results to output and the estimated parameter values to parameter_file. Use values of lambda from 0 to 0.9 in steps of 0.05 to estimate proportion of null hypotheses (standard settings in qvalue) and produce estimates of q values robust for small p values.
 
 ### List of options:
 
-Usage: large_q_value [options]
+Usage: largeQvalue [options]
 Options:
 
 ```

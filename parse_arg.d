@@ -8,7 +8,7 @@ import std.getopt;
 import std.math : isNaN;
 import std.stdio : writeln;
 
-static immutable string helpString = "Usage: large_q_value [options]
+static immutable string helpString = "Usage: largeQvalue [options]
 Options:
     --help     : Print help and quit
     --version  : Print version and quit
@@ -27,7 +27,7 @@ Options:
     --col      : Column with p values (default = 1)
 ";
 
-static immutable string versionString = "large_q_value: version 0.1.2";
+static immutable string versionString = "largeQvalue: version 0.1.2";
 
 class InputException : Exception {
   pure this(string s) {super(s);}

@@ -1,20 +1,20 @@
 GSL = /usr/lib/libgsl.a /usr/lib/libgslcblas.a
 
-large_q_value : spline.c large_q_value.d parse_arg.d
+largeQvalue : spline.c largeQvalue.d parse_arg.d
 	gcc -c spline.c -o spline.o
-	ldc2 large_q_value.d parse_arg.d spline.o ${GSL} -O3 -of="large_q_value"
+	ldc2 largeQvalue.d parse_arg.d spline.o ${GSL} -O3 -of="largeQvalue"
 
-dmd : spline.c large_q_value.d parse_arg.d
+dmd : spline.c largeQvalue.d parse_arg.d
 	gcc -c spline.c -o spline.o
-	dmd -release -noboundscheck -inline -O large_q_value.d parse_arg.d spline.o ${GSL}
+	dmd -release -noboundscheck -inline -O largeQvalue.d parse_arg.d spline.o ${GSL}
 
 .PHONY : sample clean boot
 
 clean :
-	rm -f *.o large_q_value
+	rm -f *.o largeQvalue
 
 sample :
-	./large_q_value --header --col 4 --out temp --param parameter_file vQTLresults.txt
+	./largeQvalue --header --col 4 --out temp --param parameter_file vQTLresults.txt
 
 boot :
-	./large_q_value --boot --header --col 4 --out temp --param parameter_file vQTLresults.txt
+	./largeQvalue --boot --header --col 4 --out temp --param parameter_file vQTLresults.txt
