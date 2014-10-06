@@ -1,0 +1,33 @@
+#The estimated value of pi0 is:            0.350538
+
+#lambda values to calculate this were:         [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9]
+
+#with the corresponding  pi0 values:        [1, 0.445501, 0.439427, 0.432638, 0.431452, 0.419355, 0.418433, 0.415881, 0.409677, 0.403519, 0.394194, 0.397133, 0.393548, 0.385253, 0.378495, 0.370323, 0.362903, 0.350538, 0.348387]
+
+#and mean squared error estimates:        [42.4599, 0.964491, 0.85278, 0.738637, 0.719512, 0.538467, 0.518636, 0.497835, 0.423078, 0.340746, 0.252589, 0.28942, 0.257659, 0.182415, 0.136385, 0.0955588, 0.0851119, 0.0762539, 0.102196]
+
+###R code to produce diagnostic plots for bootstrap estimates of  pi0
+
+plot.pi0.data <- data.frame(x = rep(c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9), 100),
+    y = c(1, 0.444482, 0.430108, ... , 0.341935))
+
+plot.data <- data.frame(x = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9),
+    y = c(1, 0.445501, 0.439427, 0.432638, 0.431452, 0.419355, 0.418433, 0.415881, 0.409677, 0.403519, 0.394194, 0.397133, 0.393548, 0.385253, 0.378495, 0.370323, 0.362903, 0.350538, 0.348387),
+    mse = c(42.4599, 0.964491, 0.85278, 0.738637, 0.719512, 0.538467, 0.518636, 0.497835, 0.423078, 0.340746, 0.252589, 0.28942, 0.257659, 0.182415, 0.136385, 0.0955588, 0.0851119, 0.0762539, 0.102196),
+    minpi0 = 0.348387,
+    final = 0.350538)
+
+library(ggplot2)
+plot1 <- ggplot(plot.data, aes(x = x, y = y)) + 
+    geom_boxplot(data = plot.pi0.data, aes(x = x, y = y, group = x)) +
+    geom_point(colour="blue") +
+    geom_hline(yintercept = plot.data$minpi0, colour = "blue") +
+    geom_line(aes(x = x, y = mse), linetype = "dashed") +
+    geom_hline(yintercept = plot.data$final, colour = "red") +
+    geom_vline(xintercept = plot.data$x[plot.data$mse==min(plot.data$mse)], 
+               linetype = "dashed") +
+    ylim(0,1) +
+    labs(x = expression(lambda), y = expression(pi[0])) +
+    theme(axis.title = element_text(size = rel(2)))
+print(plot1)
+

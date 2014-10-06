@@ -1,0 +1,417 @@
+\documentclass{amsart}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{tabulary}
+\usepackage{framed}
+\usepackage{amsaddr}
+\usepackage[colorlinks=true, urlcolor=blue]{hyperref}
+\usepackage{listings}
+\usepackage[]{natbib}
+\usepackage{longtable}
+\usepackage[normalem]{ulem}
+\usepackage{caption}
+\usepackage{subcaption}
+\lstset{%
+  language=[LaTeX]TeX,
+  basicstyle=\ttfamily,
+  breaklines=true,
+  columns=fullflexible
+}
+\newcommand{\beginsupplement}{%
+        \setcounter{table}{0}
+        \renewcommand{\thetable}{S\arabic{table}}%
+        \setcounter{figure}{0}
+        \renewcommand{\thefigure}{S\arabic{figure}}%
+        \setcounter{section}{0}
+        \renewcommand{\thesubsection}{S\arabic{subsection}}%
+
+     }
+  
+
+\author[]{Andrew Anand Brown$^*$}
+\address{$^*$Wellcome Trust Sanger Institute, Hinxton, Cambridge, CB10 1HH, UK}
+\title[largeQvalue]{largeQvalue: A program for calculating FDR estimates with large datasets}
+
+\begin{document}
+
+\maketitle
+
+\linespread{1.6}
+
+\begin{abstract}
+This is an implementation of the R statistical software qvalue package \citep{qvalue}, designed for use with large datasets where memory or computation time is limiting. In addition to estimating p values adjusted for multiple testing, the software outputs a script which can be pasted into R to produce diagnostic plots and parameter estimates. This program runs almost 30 times faster and requests substantially less memory than the qvalue package when analysing 10 million p values on a high performance cluster. The software has been used to control for the multiple testing of 390 million tests when analysing a full cis scan of RNA-seq exon level gene expression from the Eurobats project \citep{brownepistasis}.
+\end{abstract}
+
+\bigskip
+
+\noindent \small{\textbf{Keywords}: Multiple testing, false discovery rate, q values, large datasets}
+
+\bigskip
+
+\section{Introduction}
+
+Recent developments have allowed us to investigate the action of DNA in a new, hypothesis free framework. The ability to collect information on DNA at millions of loci has led to a reappraisal of statistical methods to correct for multiple testing: it has been argued that in many contexts traditional measures of significance such as Bonferroni are too conservative, leading to an unacceptably high rate of falsely accepting null hypotheses. The false discovery rate is an alternative way of accounting for multiple testing, which tolerates a higher false positive rate in order not to discard potentially interesting findings \citep{fdr}. It can simplistically be viewed as the proportion of falsely rejected null hypotheses, and the concept was further developed in \citet{splinestorey} and \citet{bootstorey}, and implemented in the R package qvalue \citep{qvalue}.
+
+Advances in sequencing have accelerated our ability to perform experiments of even greater scope. Whereas genotyping arrays ascertain DNA at around a million SNPs, the 1000 Genomes project \citep{1kg} has uncovered around 100 million variants in the human genome. Application of sequencing to produce molecular phenotypes has also revolutionised how we can interrogate cellular function with few pre-conceived notions; for example sequencing of RNA allows us to construct hundreds of thousands of phenotypes, each capturing the expression of a given exon \citep{geuvadis}. This permits a full, hypothesis free investigation of the genetics of gene regulation. Together, these developments imply that a full genome-wide scan for all possible variants affecting exon expression would involve $\sim 10^{13}$ hypothesis tests.
+
+The qvalue package \citep{qvalue}, implemented in R \citep{R}, allows estimation of false discovery rates, as well as the quantity $\pi_0$, which is an estimate of the proportion of the tests for which the null hypothesis is true. However, R programs usually run slower and consume more memory than programs written in lower level languages, rendering the qvalue package impractical when the number of tests is of the order $10^{13}$. Here I present an implementation of qvalue in a compiled language, which runs faster, uses less memory, and is capable of scaling up to the experiments produced by these new sequencing technologies.
+
+\section{Methods}
+
+\subsection{Brief description of qvalue algorithms}
+
+The qvalue package implements the algorithms described in \citet{storeydirect, splinestorey} and \citet{bootstorey}. It takes as input a set of p values and maps these onto q values, which can be interpreted as follows: a decision rule which rejects all null hypotheses with corresponding q values less than $\alpha$ has an estimated false discovery rate of $\alpha$. Taking an increasing set of p values $p_1..p_n$ this mapping is defined as:
+
+\begin{equation}
+\label{eq:qvalue}
+q_i = \text{min}(\text{min}_{i' \geq i} \frac{n \pi_0p_{i'}} {i'}, 1)
+\end{equation}
+
+The quantity $\pi_0$ is the proportion of null hypotheses amongst all tests, and is a central difference between the methods used to control the FDR in \citet{fdr} and the qvalue approach. Its estimation is described in Sections~\ref{sec:pi0}, \ref{sec:spline} and \ref{sec:boot}.
+
+\subsection{Implementation}
+
+largeQvalue is written mainly in the D programming language \citep{dlang}. D is a compiled language which promises runtime speeds of the same order as C or C++ while guaranteeing memory safety, and also allows easy integration with code written in C. Leveraging this, parts of the program are written in C; in particular we use the GNU Software Library (\url{http://www.gnu.org/software/gsl/}) functions for fitting cubic splines, and sampling from the binomial distribution. The program is released as standalone binaries for use on the linux and Mac OSX systems, as well as source code which can be downloaded from a github repository (\url{https://github.com/abrown25/qvalue}) and be compiled on the Windows platform. This source code is released under the GNU General Public Licence v3 (\url{http://www.gnu.org/copyleft/gpl.html}). The program is called from the command line with options set using parameter flags. A description of all the available options can be found by running \texttt{./largeQvalue --help}.
+
+\subsection{Input and output file formats and commands}
+
+The input format for this program is a whitespace delimited (i.e. either tab or space separated fields) text file where the p values to be adjusted for multiple testing lie within one column. Consecutive runs of whitespace are collapsed to one whitespace character. The file can either be specified using the \texttt{--input} flag (i.e. \texttt{--input PValueFile}) or if not present, then following UNIX convention the filename is taken as the last argument on the command line. The column containing the p values can be specified with the \texttt{--col} flag; by default it is assumed to be the first column. If the \texttt{--header} flag is not present, then it is assumed the file does not have a header line. Any data that cannot be converted to numerical form will be treated as missing (the corresponding q value estimate will be written as NA). If any numerical values lie outside the interval [0, 1], then the program will terminate with the message \texttt{Some p values are outside [0, 1] interval}.
+
+The standard output file is the input file with an additional column on the end which specifies the q value \citep{storeydirect} corresponding to the p value in that row. If a filename for the output is not specified using the \texttt{--out} flag, then output is written to stdout.
+
+An optional parameter file is written, if specified using the \texttt{--param} flag. This file contains the estimate of $\pi_0$ used to calculate q values as well as other intermediate parameters. This file can also be run in R, either by pasting it at the R prompt or by running the command \texttt{source("ParameterFileName")} from the R terminal. This script will produce diagnostic plots, as seen in Figure~\ref{fig:diagplot} and described in Sections~\ref{sec:spline} and \ref{sec:boot}. For this functionality, the graphing package ggplot2 \citep{ggplot} is required.
+
+\subsection{Estimation of $\pi_0$}
+\label{sec:pi0}
+
+One method to estimate the proportion of null hypotheses is to choose a value $\lambda\in [0, 1)$ and assume that every $p > \lambda$ is from the null hypothesis (obviously this assumption is more valid as $\lambda$ tends to 1). Then, assuming uniform p values generated by the null hypothesis, this proportion can be reflected back across the interval. This corresponds to estimates of $\pi_0$ as a function of $\lambda$:
+
+\begin{equation}
+  \label{eq:pi0lambda}
+  \hat{\pi}_0(\lambda) = \frac{\sum_{p_i > \lambda}1}{n(1-\lambda)} 
+\end{equation}
+
+Using the qvalue package in R, the user can specify a value of $\lambda$ to be used to estimate $\pi_0$ according to Equation~\ref{eq:pi0lambda}. The equivalent command in the largeQvalue package uses the flag \texttt{--lambda} to specify this value. More sophisticated methods, also implemented in the R package, use a sequence of $\lambda$ values to produce a range of estimates of $\pi_0$. Information from all of these values is combined either by fitting a cubic spline to these estimates \citep{splinestorey} or by taking bootstrap samples of the p values \citep{bootstorey}. The implementation of both of these options in largeQvalue is described in the following two sections.
+
+\subsection{Estimation of $\pi_0$ with cubic splines}
+\label{sec:spline}
+The methodology to estimate $\pi_0$ using cubic splines was described in \citet{splinestorey}, and is used when the specified values of $\lambda$ form a sequence rather than a single number (this is true by default) and the \texttt{--boot} flag is not given.
+
+This option takes a sequence of $\lambda$ values, specified by \texttt{--lambda START,STOP,STEP} (default value is 0 to 0.9 in steps of 0.05). Estimates of $\hat{\pi}_0(\lambda)$ are calculated at every value of $\lambda$ and a cubic spline is fitted to these points to estimate the asymptote as $\lambda\rightarrow1$. The estimate of $\pi_0$ used is the value of this cubic spline at the maximum value of $\lambda$.
+
+The amount of smoothing supplied by the spline can be adjusted using the \texttt{--coef} flag (default 5, must be greater than 3). If the \texttt{--log} flag is specified then the spline is fitted to the $\text{log(}\hat{\pi}_0(\lambda))$ values instead of $\hat{\pi}_0(\lambda)$.
+
+Figure~\ref{fig:spline_param} shows the output of the parameter file processed by R when this methodology is used. The dots show the estimates of $\pi_0$ at various values of $\lambda$, the black line is a cubic spline fitted to these points which is used to approximate the function $\pi_0(\lambda)$. The estimate $\hat{\pi}_0$ used to estimate q values is shown in red line.
+
+largeQvalue uses the spline fitting algorithm implemented in the GSL, which differs slightly to the implementation used by the qvalue package. Exact replication of qvalue results can be produced by running the program twice. First, run the code with the \texttt{--param} flag specified. Paste the parameter output into R. A line in the output \texttt{Estimate of pi0 from qvalue package is:} specifies the qvalue estimate of $\pi_0$. The analysis can then be run again, specifying this value with the \texttt{--pi0} flag.
+
+\subsection{Estimation of $\pi_0$ from bootstrap samples}
+\label{sec:boot}
+\citet{bootstorey} proposed a method of estimating $\pi_0$ based on bootstrap samples of the p values. This is used when largeQvalue is run with the flag \texttt{--boot}. The seed for the generation of the samples can be set with the flag \texttt{--seed} (default 0).
+
+Again, a sequence of $\lambda$ values is given \texttt{--lambda START,STOP,STEP} which is used to calculate estimates $\hat{\pi}_0(\lambda)$. Then, we take 100 bootstrap samples $B_j$ of the p values with replacement and calculate estimates of  $\hat{\pi}^{B_j}_0(\lambda)$ on these new datasets. The implementation of the bootstrap differs from that used in the qvalue package. To save memory and computation time, instead of resampling individual p values we sample counts of p values lying within intervals defined by the sequence of $\lambda$ from a multinomial distribution. This is effectively the same procedure.
+
+The estimate $\hat{\pi}_0(\lambda^*)$ is used to estimate q values,  where $\lambda^*$ is chosen to minimise Equation~\ref{eq:mse}.
+
+\begin{equation}
+\text{Mean squared error} = \sum_j (\hat{\pi}^{B_j}_0(\lambda) - \text{min}_{\lambda'}\hat{\pi}_0(\lambda'))^2\label{eq:mse}
+\end{equation}
+
+Figure~\ref{fig:boot_param} shows the diagnostic plot when this method is applied. Estimates $\hat{\pi}_0(\lambda)$ are shown by the blue dots, with $\text{min}_{\lambda'}\hat{\pi}_0(\lambda')$ shown by the blue line. The bootstrap estimates $\hat{\pi}^{B_j}_0(\lambda)$ are shown in the box plots and the mean square error by the dashed line. The chosen estimate of $\pi_0$, which minimises this mean squared error, is shown by the red line.
+
+\subsection{Other parameter flags}
+
+The flags \texttt{--help} and \texttt{--version} will bring up the help page and print the version number of the software respectively. The flag \texttt{--issorted} informs the program that the p values are already in ascending order with no missing values: especially with large datasets this can speed up the program considerably.
+
+The flag \texttt{--param} allows the user to specify an output file to write estimates of parameters. When only a single value of $\lambda$ is specified, this file only contains the point estimate of $\pi_0$. When $\lambda$ is specified as a sequence, these parameters include the estimate of $\pi_0$ used to calculate q values and the estimates $\hat{\pi}_0(\lambda)$ for every value in this sequence. If the cubic spline method is employed, then smoothed cubic splines values are reported at every value of $\lambda$. For the bootstrap method the file contains all bootstrap estimates $\hat{\pi}^{B_j}_0(\lambda)$ and estimates of the mean square error. Examples of these files can be found in Supplementary Materials~\ref{sec:suppspline} and \ref{sec:suppboot}. These files can be pasted into R to produce diagnostic plots, examples of which can be seen in Figures~\ref{fig:spline_param} and \ref{fig:boot_param}.
+
+The \texttt{--pi0} flag allows the estimate of $\pi_0$ to be directly specified. This can be useful to exactly recreate q values produced using the cubic spline routine from the q value package.
+
+The \texttt{--robust} flag produces q values which are more conservative for very small values of p. Instead of q values defined by Equation~\ref{eq:qvalue}, we use the formula:
+
+\begin{equation}
+\label{eq:robust}
+q_i = \text{min}(\text{min}_{i' \geq i} \frac{n \pi_0p_{i'}} {i'(1 - (1 - p_{i'})^n) }, 1)
+\end{equation}
+    % \texttt{--robust}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \includegraphics[width=\textwidth]{simple_diagnostic}
+   \caption{$\pi_0$ estimated using cubic spline.}
+   \label{fig:spline_param}
+  \end{subfigure}~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \includegraphics[width=\textwidth]{boot_diagnostic}
+   \caption{$\pi_0$ estimated using bootstrap methods.}
+   \label{fig:boot_param}
+  \end{subfigure}
+    \caption{(a) Example of the diagnostic plot produced by the standard
+      options, the dots represent the estimate of the proportion of
+      null hypotheses ($\pi_0$) for various values of $\lambda$. These
+      values should converge as $\lambda$ approaches 1; the point of
+      convergence is estimated using a spline function (black
+     line). Estimate of convergence is at the red line. (b) Example of the diagnostic plot with the \texttt{--boot}
+      option. Again, estimates of $\hat{\pi}_0(\lambda)$ are shown (blue dots). The uncertainty of these estimates
+      is calculated by taking 100 bootstrap samples of the data, the
+      distribution of these parameter estimates is shown by the box
+      plots. The estimate of $\pi_0$ used to calculate q values (the
+      red line) is the value that minimises the mean squared error
+      with the lowest estimate of $\pi_0$ calculated on the original
+      data (blue line).}
+\label{fig:diagplot}
+\end{figure}
+
+\subsection{An example command}
+
+\texttt{./largeQvalue --header --col 4 --out OutputFile\\ 
+--param ParameterFile --lambda 0,0.9,0.05 --robust QTLresults.txt}
+
+The p values can be found in the 4th column of QTLresults.txt, write the results to OutputFile and the estimated parameter values to ParameterFile. Use values of $\lambda$ from 0 to 0.9 in steps of 0.05 to estimate proportion of null hypotheses (standard settings in qvalue) and produce estimates of q values robust for small p values.
+
+\subsection{Comparison of speed and memory usage of largeQvalue and qvalue package}
+\label{sec:compare}
+
+We compared the CPU time and memory used by largeQvalue with that of the qvalue implementation in R. Each program was run five times against four datasets; these consisted of text files with a single column of either $5\times10^5, 10^6, 5\times10^6,$ or $10^7$ uniformly distributed numbers between 0 and 1. The following R code was used to call the qvalue algorithm with the cubic spline method:
+
+\begin{verbatim}
+library(qvalue)
+Pvalues <- scan(file = "InputFile")
+write(qvalue(Pvalues)$qvalues, file = "Qvalues", ncolumns = 1)
+\end{verbatim}
+
+\noindent For the bootstrap method the following code was used:
+
+\begin{verbatim}
+library(qvalue)
+Pvalues <- scan(file = "InputFile")
+write(qvalue(Pvalues, pi0.method == "bootstrap")$qvalues,
+                      file = "Qvalues", ncolumns = 1)
+\end{verbatim}
+
+\noindent The corresponding commands for the largeQvalue package were:
+
+\begin{verbatim}
+./largeQvalue --out Qvalues InputFile
+\end{verbatim}
+
+\noindent and
+
+\begin{verbatim}
+./largeQvalue --boot --out Qvalues InputFile
+\end{verbatim}
+
+\clearpage
+
+\begin{framed}
+  \subsection{List of options}
+
+  \noindent List of options:
+
+  \noindent Usage: \texttt{largeQvalue [options]}\\
+  \noindent Options:
+
+
+ \begin{tabular}{llp{9cm}}
+    \texttt{--help}    & : &Print help and quit \\
+    \texttt{--version} & : &Print version and quit \\
+    \texttt{--header}  & : &Input has header line (default = FALSE) \\
+    \texttt{--boot}    & : &Apply bootstrap method to find $\pi_0$ (default = FALSE) \\
+    \texttt{--seed}    & : &Set seed for generating bootstrap samples (default = 0, equivalent to GSL default) \\
+    \texttt{--coef}    & : &Set the number of coefficients used to fit cubic spline (default = 5, must be greater than 3) \\
+    \texttt{--log}     & : &Smoothing spline applied to log $\pi_0$ values (default = FALSE) \\
+    \texttt{--robust}  & : &More robust values for small p values (default = FALSE) \\
+    \texttt{--pi0}     & : &Use value of $\pi_0$ given (useful for recreating qvalue package results) \\
+    \texttt{--lambda}  & : &Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05) \\
+    \texttt{--param}   & : &Print out parameter list to given file \\
+    \texttt{--out}     & : &File to write results to (default = stdout) \\
+    \texttt{--input}   & : &File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used) \\
+    \texttt{--issorted}& : &File has already been sorted with no missing values (default = FALSE) \\
+    \texttt{--col}     & : &Column with p values (default = 1) \\
+\end{tabular}
+ \end{framed}
+
+\subsection{Binary executables}
+
+The binary for 64bit linux can be found here:
+
+\noindent \url{ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue.tar.gz}.
+
+\noindent The binary for Mac OSX can be found here:
+
+\noindent \url{ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue_mac.tar.gz}.
+
+\subsection{Building from source}
+
+To compile an executable binary from source (for example if you are using Windows), it is necessary to have both a D compiler (we have used the ldc compiler as it produces faster programs) and the gsl library installed on your system. Binaries for the ldc compiler can be downloaded from here: \url{https://github.com/ldc-developers/ldc/releases} and a link to the gsl software library found here: \url{http://www.gnu.org/software/gsl/}. Once both are installed you can clone the github account by running \texttt{git clone https://github.com/abrown25/qvalue.git}. Then change to the qvalue directory and run \texttt{make}. If you see an error stating \texttt{/usr/lib/libgsl.a: No such file or directory} this means the gsl is installed in a different folder on your system. Edit the first line of makefile to reflect where the library can be found, then rerun the \texttt{make} command. Once this is done, if installation has worked then running \texttt{./largeQvalue} should bring up the help information. If there are any issues with this procedure, please contact \href{mailto:andrew.brown@unige.ch}{andrew.brown@unige.ch}.
+
+It is possible that you wish to compile with the reference D compiler DMD (this may especially be true if you are working on a Windows system). This can be downloaded from \url{http://dlang.org/download.html}. Then, the only difference with the previous installation is you must run \texttt{make dmd} instead of \texttt{make}.
+
+\section{Results}
+
+
+\subsection{CPU time and memory usage of largeQvalue and the qvalue package}
+
+\noindent To compare performance of the two implementations of the qvalue algorithm, we analysed four different datasets five times with both of the programs on the High Performance Cluster at the Wellcome Trust Sanger Institute (further details in Section~\ref{sec:compare}). Table~\ref{tab:timing} lists the CPU time and maximum memory reported by the cluster. The CPU time is shown in Figure~\ref{fig:time}. The largeQvalue package requires less time to analyse the data, and the difference increases as the number of tests increases. When there are $10^7$ p values, the largeQvalue program is 27 times faster than the qvalue package when comparing median running times.
+
+We do not believe that the cluster reports reliable measures of memory usage, especially as the largeQvalue package runs for a relatively brief time, and allocates memory for much of it. However, when comparing maximum reported memory use across all runs with $10^7$ p values, this program uses less than a quarter of the memory of the qvalue package.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{Timings}
+  \caption{Graph showing amount of CPU time needed to run largeQvalue compared to the qvalue package in R.}
+  \label{fig:time}
+\end{figure}
+
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=\textwidth]{mem_use}
+%   \caption{Ratio of memory use for different numbers of p values}
+%   \label{fig:mem}
+% \end{figure}
+\subsection{Application to find tissue specific eQTL}
+
+The program was used to look for evidence of cell type specific eQTL in the skin expression data from the Eurobats project \citep{brownepistasis}. We are currently preparing a manuscript based on this work. In brief, a measure of cell type composition was constructed, quantifying the proportions of dermis and epidermis in each individual sample. Then, for every gene and every SNP within 1Mbp of that gene, we tested for interactions between SNP and cell-type measure which affected the expression of that gene (as quantified by RNA-seq), a total of 390,537,631 tests. We ran largeQvalue on these p values. Although the high multiple testing burden meant that we found no significant hits, we estimated a value of $\pi_0$ of 0.961, suggesting that 3.9\% of cis-SNPs had different effects on dermis expression in comparison to expression within the epidermis layer. The program took 1 hour 25 mins 55 seconds of CPU time to run, and used 3.99GB of memory.
+
+\section{Conclusion}
+
+The qvalue package has been widely adopted to control for multiple testing; the two papers proposing its methodology \citep{splinestorey, bootstorey} have been cited over 5,600 times. This means that the procedure and its implementation have become widely accepted. The integration within the R framework makes it easy for results to be processed and plotted. The implementation is capable of analysing the results of genome-wide association studies or studies of differential expression of genes (one context where the methodology was originally proposed). However, it is doubtful that it scales up to cope with the results coming from modern cellular sequencing experiments, which can test hundreds of thousands of phenotypes for association with tens of thousands of SNPs (if concentrating on the cis window). For this we propose our implementation, which has already been used to analyse such data.
+
+\section{Acknowledgments}
+
+I would like to thank Leo Parts and Ana Vi\~{n}uela for their comments and suggestions which have greatly changed this article for the better. Andrew Brown has been supported by a grant from the South-Eastern Norway Health Authority (No. 2011060).
+\bibliography{largeQvalue}
+	\bibliographystyle{plainnat}
+
+\beginsupplement
+
+\section{Supplementary materials}
+
+\subsection{CPU and memory usage for largeQvalue and qvalue programs}
+
+\begin{center}
+
+  \begin{longtable}{cccccc}
+    \caption{Maximum amount of RAM used, and total CPU time when
+      running largeQvalue and qvalue package to adjust for
+      multiple testing.}
+    \label{tab:timing}\\
+    \hline
+    Number of & &  \multicolumn{2}{c}{Normal} &\multicolumn{2}{c}{Bootstrap} \\
+    P values &	Software & CPU & Memory & CPU & Memory\\
+    \hline
+    \endfirsthead
+    \multicolumn{6}{c}%
+    {\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+    \hline
+    & &  \multicolumn{2}{c}{Normal} &\multicolumn{2}{c}{Bootstrap} \\
+    &	Software & CPU & Memory & CPU & Memory\\
+    \hline
+    \endhead
+    \hline \multicolumn{6}{r}{\textit{Continued on next page}} \\
+    \endfoot
+    \hline
+    \endlastfoot
+    \hline
+    5$\times10^{5}$ & largeQvalue & 3.01 & NA & 1.23 & NA\\
+    5$\times10^{5}$ & largeQvalue & 1.3 & 24 & 1.29 & NA\\
+    5$\times10^{5}$ & largeQvalue & 1.33 & 24 & 1.3 & NA\\
+    5$\times10^{5}$ & largeQvalue & 1.33 & 24 & 1.22 & NA\\
+    5$\times10^{5}$ & largeQvalue & 1.26 & NA & 1.33 & 24\\
+    $10^{6}$ & largeQvalue & 2.87 & 25 & 2.57 & 35\\
+    $10^{6}$ & largeQvalue & 2.61 & 35 & 2.55 & 35\\
+    $10^{6}$ & largeQvalue & 2.61 & NA & 2.51 & 35\\
+    $10^{6}$ & largeQvalue & 6.73 & 35 & 2.64 & 35\\
+    $10^{6}$ & largeQvalue & 5.93 & 6 & 2.78 & 35\\
+    5$\times10^{6}$ & largeQvalue & 13.78 & 25 & 12.9 & 40\\
+    5$\times10^{6}$ & largeQvalue & 12.6 & 40 & 13.44 & 60\\
+    5$\times10^{6}$ & largeQvalue & 12.65 & 41 & 13.35 & 35\\
+    5$\times10^{6}$ & largeQvalue & 13.07 & 39 & 13.89 & 33\\
+    5$\times10^{6}$ & largeQvalue & 13.26 & 39 & 13.67 & 39\\
+    $10^{7}$ & largeQvalue & 27.55 & 38 & 28.45 & 37\\
+    $10^{7}$ & largeQvalue & 26.95 & 38 & 27.93 & 37\\
+    $10^{7}$ & largeQvalue & 24.71 & 40 & 27.29 & 38\\
+    $10^{7}$ & largeQvalue & 27.65 & 130 & 27.05 & 38\\
+    $10^{7}$ & largeQvalue & 26.95 & 241 & 27.35 & 25\\
+    5$\times10^{5}$ & qvalue & 22.62 & 59 & 26.37 & 39\\
+    5$\times10^{5}$ & qvalue & 19.86 & 39 & 28.22 & 39\\
+    5$\times10^{5}$ & qvalue & 16.73 & 36 & 28.06 & 36\\
+    5$\times10^{5}$ & qvalue & 21.65 & 36 & 38.42 & 39\\
+    5$\times10^{5}$ & qvalue & 25.46 & 36 & 36.53 & 123\\
+    $10^{6}$ & qvalue & 41.78 & 186 & 57.08 & 175\\
+    $10^{6}$ & qvalue & 40.27 & 187 & 76.24 & 172\\
+    $10^{6}$ & qvalue & 44.31 & 184 & 78.75 & 172\\
+    $10^{6}$ & qvalue & 54.98 & 184 & 79.88 & 172\\
+    $10^{6}$ & qvalue & 38.26 & 187 & 79.97 & 172\\
+    5$\times10^{6}$ & qvalue & 258.01 & 695 & 265.75 & 658\\
+    5$\times10^{6}$ & qvalue & 264.52 & 695 & 330.91 & 589\\
+    5$\times10^{6}$ & qvalue & 276.74 & 695 & 342.6 & 589\\
+    5$\times10^{6}$ & qvalue & 666.71 & 694 & 337.23 & 638\\
+    5$\times10^{6}$ & qvalue & 687.88 & 694 & 353.91 & 638\\
+    $10^{7}$ & qvalue & 503.36 & 1122 & 718.42 & 1115\\
+    $10^{7}$ & qvalue & 498.11 & 1122 & 734.73 & 1112\\
+    $10^{7}$ & qvalue & 542.59 & 1121 & 809.79 & 1112\\
+    $10^{7}$ & qvalue & 1261.59 & 1120 & 802.99 & 1112\\
+    $10^{7}$ & qvalue & 1385.38 & 1120 & 718.67 & 1123\\
+  \end{longtable}
+\end{center}
+
+
+\subsection{Parameter output file using default settings}
+\label{sec:suppspline}
+This is an example of the standard output using the \texttt{--param} flag and the standard, spline estimation of $\pi_0$. It has been edited to solely to ensure lines fit comfortably on the page and to replace unicode characters.
+
+\lstinputlisting{simple_param}
+
+\subsection{Parameter output file using \texttt{--boot} flag}
+\label{sec:suppboot}
+This is an example of the standard output using the \texttt{--param} flag and the \texttt{--boot} option, meaning $\pi_0$ is estimated using bootstrap methods. It has been edited to ensure lines fit comfortably on the page, and to remove many of the 1900 bootstrap $\pi_0$ values outputted as standard (therefore it will not work if directly pasted into R).
+
+\lstinputlisting{boot_param}
+\iffalse
+library(ggplot2)
+
+results <- read.table(file="timings", header=T)
+results <- cbind(results, paste(results[, 1], results[, 2], results[, 3], sep='_'))
+results <- results[order(results[, 4]),]
+
+plot.data <- results[!duplicated(results[, 6]),]
+plot.data$Software <- gsub("L", "l", plot.data$Software)
+plot.data$Type = factor(plot.data$Type, levels = c("Bootstrap", "Normal"), labels = c("Bootstrap", "Standard"))
+
+pdf("Timings.pdf")
+ggplot(plot.data, aes(y = CPU, x = PValues, col=Software)) + geom_line() +
+          facet_wrap(~Type) +
+          theme(strip.text = element_text(size=rel(1.5)), legend.text = element_text(size=rel(1.5)),
+                legend.position = "top", legend.title = element_text(size=rel(1.5)),
+                axis.title = element_text(size=rel(1.5))) +
+          labs(y = "CPU time (seconds)", x = "Number of p values")
+dev.off()
+
+## rm(list=ls(all=T))
+## results <- read.table(file="timings", header=T)
+## results <- cbind(results, paste(results[, 1], results[, 2], results[, 3], sep='_'))
+## results <- results[!is.na(results[, 5]), ]
+## results <- results[order(results[, 5]), ]
+## plot.data <- results[!duplicated(results[, 6]), ]
+
+## plot.data <- plot.data[order(plot.data[,1]),]
+## plot.data <- plot.data[order(plot.data[,3]),]
+## plot.data <- plot.data[order(a[,2]),]
+
+## pdf("mem_use.pdf")
+## ggplot(data = data.frame(PValues = plot.data[1:8, 1], Memory = plot.data[9:16,5] / plot.data[1:4,5],
+                            Type = rep(c("Bootstrap", "Standard"), each = 4)),
+          aes(x=PValues, y = Memory, col=Type)) +
+          geom_line() +
+          labs(x = "Number of p values", y = "Ratio of memory use") +
+          theme(legend.position = "top", legend.text = element_text(size=rel(1.5)),
+                axis.title = element_text(size=rel(1.5)),
+                legend.title = element_text(size=rel(1.5)))
+## dev.off()
+
+
+\fi
+\end{document}
