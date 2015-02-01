@@ -8,7 +8,13 @@ Given a whitespace separated table (specified by --input or as the last option o
 
 Latest binary for 64bit Linux can be found here:
 
-https://www.dropbox.com/s/re88vqip06lwy5c/large_q_value?dl=0
+The binary for 64bit linux can be found here:
+
+ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue.tar.gz
+
+The binary for Mac OSX can be found here:
+
+ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue_mac.tar.gz
 
 ### Example command:
 

@@ -1,12 +1,10 @@
-GSL = /usr/lib/libgsl.a /usr/lib/libgslcblas.a
+largeQvalue : src/spline.c  src/largeQvalue.d src/parse_arg.d
+	gcc -c src/spline.c -o spline.o
+	ldc2  src/largeQvalue.d  src/parse_arg.d spline.o -L-lgsl -L-lgslcblas -O3 -of="largeQvalue"
 
-largeQvalue : spline.c largeQvalue.d parse_arg.d
-	gcc -c spline.c -o spline.o
-	ldc2 largeQvalue.d parse_arg.d spline.o ${GSL} -O3 -of="largeQvalue"
-
-dmd : spline.c largeQvalue.d parse_arg.d
-	gcc -c spline.c -o spline.o
-	dmd -release -noboundscheck -inline -O largeQvalue.d parse_arg.d spline.o ${GSL}
+dmd : src/spline.c  src/largeQvalue.d src/parse_arg.d
+	gcc -c  src/spline.c -o spline.o
+	dmd -release -noboundscheck -inline -O  src/largeQvalue.d  src/parse_arg.d spline.o -L-lgsl -L-lgslcblas
 
 .PHONY : sample clean boot
 

@@ -29,10 +29,10 @@
      }
   
 
- \author[]{Andrew Anand Brown$^*$}
- \address{$^*$Wellcome Trust Sanger Institute, Hinxton, Cambridge, CB10 1HH, UK}\\
- $^\dagger$NORMENT, KG Jebsen Centre for Psychosis Research, Institute of Clinical Medicine, University of Oslo, Norway}
- \title[largeQvalue]{largeQvalue: A program for calculating FDR estimates with large datasets}
+\author[]{Andrew Anand Brown$^{*\dagger}$}
+\address{$^*$Wellcome Trust Sanger Institute, Hinxton, Cambridge, CB10 1HH, UK\\
+$^\dagger$NORMENT, KG Jebsen Centre for Psychosis Research, Institute of Clinical Medicine, University of Oslo, Norway}
+\title[largeQvalue]{largeQvalue: A program for calculating FDR estimates with large datasets}
 
 \begin{document}
 
@@ -41,7 +41,7 @@
 \linespread{1.6}
 
 \begin{abstract}
-This is an implementation of the R statistical software qvalue package \citep{qvalue}, designed for use with large datasets where memory or computation time is limiting. In addition to estimating p values adjusted for multiple testing, the software outputs a script which can be pasted into R to produce diagnostic plots and parameter estimates. This program runs almost 30 times faster and requests substantially less memory than the qvalue package when analysing 10 million p values on a high performance cluster. The software has been used to control for the multiple testing of 390 million tests when analysing a full cis scan of RNA-seq exon level gene expression from the Eurobats project \citep{brownepistasis}.
+This is an implementation of the R statistical software qvalue package \citep{qvalue}, designed for use with large datasets where memory or computation time is limiting. In addition to estimating p values adjusted for multiple testing, the software outputs a script which can be pasted into R to produce diagnostic plots and parameter estimates. This program runs almost 30 times faster and requests substantially less memory than the qvalue package when analysing 10 million p values on a high performance cluster. The software has been used to control for the multiple testing of 390 million tests when analysing a full cis scan of RNA-seq exon level gene expression from the Eurobats project \citep{brownepistasis}. The source code and links to executable files for linux and Mac OSX can be found here: \url{https://github.com/abrown25/qvalue}. Help for the package can be found by running \texttt{./largeQvalue --help}. 
 \end{abstract}
 
 \bigskip
@@ -105,7 +105,7 @@ The amount of smoothing supplied by the spline can be adjusted using the \texttt
 
 Figure~\ref{fig:spline_param} shows the output of the parameter file processed by R when this methodology is used. The dots show the estimates of $\pi_0$ at various values of $\lambda$, the black line is a cubic spline fitted to these points which is used to approximate the function $\pi_0(\lambda)$. The estimate $\hat{\pi}_0$ used to estimate q values is shown in red line.
 
-largeQvalue uses the spline fitting algorithm implemented in the GSL, which differs slightly to the implementation used by the qvalue package. Exact replication of qvalue results can be produced by running the program twice. First, run the code with the \texttt{--param} flag specified. Paste the parameter output into R. A line in the output \texttt{Estimate of pi0 from qvalue package is:} specifies the qvalue estimate of $\pi_0$. The analysis can then be run again, specifying this value with the \texttt{--pi0} flag.
+largeQvalue uses the spline fitting algorithm implemented in the gsl, which differs slightly to the implementation used by the qvalue package. Exact replication of qvalue results can be produced by running the program twice. First, run the code with the \texttt{--param} flag specified. Paste the parameter output into R. A line in the output \texttt{Estimate of pi0 from qvalue package is:} specifies the qvalue estimate of $\pi_0$. The analysis can then be run again, specifying this value with the \texttt{--pi0} flag.
 
 \subsection{Estimation of $\pi_0$ from bootstrap samples}
 \label{sec:boot}
@@ -204,7 +204,7 @@ write(qvalue(Pvalues, pi0.method == "bootstrap")$qvalues,
 ./largeQvalue --boot --out Qvalues InputFile
 \end{verbatim}
 
-\clearpage
+%\clearpage
 
 \begin{framed}
   \subsection{List of options}
@@ -220,7 +220,7 @@ write(qvalue(Pvalues, pi0.method == "bootstrap")$qvalues,
     \texttt{--version} & : &Print version and quit \\
     \texttt{--header}  & : &Input has header line (default = FALSE) \\
     \texttt{--boot}    & : &Apply bootstrap method to find $\pi_0$ (default = FALSE) \\
-    \texttt{--seed}    & : &Set seed for generating bootstrap samples (default = 0, equivalent to GSL default) \\
+    \texttt{--seed}    & : &Set seed for generating bootstrap samples (default = 0, equivalent to gsl default) \\
     \texttt{--coef}    & : &Set the number of coefficients used to fit cubic spline (default = 5, must be greater than 3) \\
     \texttt{--log}     & : &Smoothing spline applied to log $\pi_0$ values (default = FALSE) \\
     \texttt{--robust}  & : &More robust values for small p values (default = FALSE) \\
@@ -246,7 +246,7 @@ The binary for 64bit linux can be found here:
 
 \subsection{Building from source}
 
-To compile an executable binary from source (for example if you are using Windows), it is necessary to have both a D compiler (we have used the ldc compiler as it produces faster programs) and the gsl library installed on your system. Binaries for the ldc compiler can be downloaded from here: \url{https://github.com/ldc-developers/ldc/releases} and a link to the gsl software library found here: \url{http://www.gnu.org/software/gsl/}. Once both are installed you can clone the github account by running \texttt{git clone https://github.com/abrown25/qvalue.git}. Then change to the qvalue directory and run \texttt{make}. If you see an error stating \texttt{/usr/lib/libgsl.a: No such file or directory} this means the gsl is installed in a different folder on your system. Edit the first line of makefile to reflect where the library can be found, then rerun the \texttt{make} command. Once this is done, if installation has worked then running \texttt{./largeQvalue} should bring up the help information. If there are any issues with this procedure, please contact \href{mailto:andrew.brown@unige.ch}{andrew.brown@unige.ch}.
+To compile an executable binary from source (for example if you are using Windows), it is necessary to have both a D compiler (we have used the ldc compiler as it produces faster programs) and the gsl library installed on your system. Binaries for the ldc compiler can be downloaded from here: \url{https://github.com/ldc-developers/ldc/releases} and a link to the gsl software library found here: \url{http://www.gnu.org/software/gsl/}. Once both are installed you can clone the github account by running \texttt{git clone https://github.com/abrown25/qvalue.git}. Then change to the qvalue directory and run \texttt{make}. If you see an error stating \texttt{/usr/lib/libgsl.a: No such file or directory} this means the gsl is installed in a different folder on your system. Edit the first line of the makefile to reflect where the library can be found, then rerun the \texttt{make} command. Once this is done, if installation has worked then running \texttt{./largeQvalue} should bring up the help information. If there are any issues with this procedure, please contact \href{mailto:andrew.brown@unige.ch}{andrew.brown@unige.ch}.
 
 It is possible that you wish to compile with the reference D compiler DMD (this may especially be true if you are working on a Windows system). This can be downloaded from \url{http://dlang.org/download.html}. Then, the only difference with the previous installation is you must run \texttt{make dmd} instead of \texttt{make}.
 
@@ -280,7 +280,7 @@ The program was used to look for evidence of cell type specific eQTL in the skin
 
 The qvalue package has been widely adopted to control for multiple testing; the two papers proposing its methodology \citep{splinestorey, bootstorey} have been cited over 5,600 times. This means that the procedure and its implementation have become widely accepted. The integration within the R framework makes it easy for results to be processed and plotted. The implementation is capable of analysing the results of genome-wide association studies or studies of differential expression of genes (one context where the methodology was originally proposed). However, it is doubtful that it scales up to cope with the results coming from modern cellular sequencing experiments, which can test hundreds of thousands of phenotypes for association with tens of thousands of SNPs (if concentrating on the cis window). For this we propose our implementation, which has already been used to analyse such data.
 
-\section{Acknowledgments}
+\section{Acknowledgements}
 
 I would like to thank Leo Parts and Ana Vi\~{n}uela for their comments and suggestions which have greatly changed this article for the better. Andrew Brown has been supported by a grant from the South-Eastern Norway Health Authority (No. 2011060).
 \bibliography{largeQvalue}
