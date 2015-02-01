@@ -1,0 +1,12 @@
+{
+    "name": "largeQvalue",
+    "description": "largeQvalue: A program for calculating FDR estimates with large datasets",
+    "homepage": "https://github.com/abrown25/qvalue",
+    "authors": ["Andrew Brown"],
+    "license": "GPL-3.0",
+    "copyright": "2014 Genome Research Ltd.",
+    "sourceFiles": ["spline.o"],
+    "libs": ["gsl", "gslcblas"],
+    "preGenerateCommands": ["gcc -c src/spline.c -o spline.o"],
+    "postBuildCommands": ["rm *.o"]
+}
