@@ -18,7 +18,7 @@ ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue_mac.tar.gz
 
 ### Example command:
 
-./largeQvalue --header --col 4 --out output --param parameter_file --lambda 0,0.9,0.05 --robust QTLresults.txt
+largeQvalue --header --col 4 --out output --param parameter_file --lambda 0,0.9,0.05 --robust QTLresults.txt
 
 The p values can be found in the 4th column of QTLresults.txt, write the results to output and the estimated parameter values to parameter_file. Use values of lambda from 0 to 0.9 in steps of 0.05 to estimate proportion of null hypotheses (standard settings in qvalue) and produce estimates of q values robust for small p values.
 
@@ -40,7 +40,7 @@ Options:
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
     --param    : Print out parameter list to given file
     --out      : File to write results to (default = stdout)
-    --input    : File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used)
+    --input    : File to take results from. Can also be specified by the last argument on the command-line after all others have been parsed. If not present, is taken to be the stdin.
     --issorted : File has already been sorted with no missing values (default = FALSE)
     --col      : Column with p values (default = 1)
 ```

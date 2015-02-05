@@ -22,12 +22,12 @@ Options:
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
     --param    : Print out parameter list to given file
     --out      : File to write results to (default = stdout)
-    --input    : File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used)
+    --input    : File to take results from. Can also be specified by the last argument on the command-line after all others have been parsed. If not present, is taken to be the stdin.
     --issorted : File has already been sorted with no missing values (default = FALSE)
     --col      : Column with p values (default = 1)
 ";
 
-static immutable string versionString = "largeQvalue: version 0.1.2";
+static immutable string versionString = "largeQvalue: version 1.0.0";
 
 class InputException : Exception {
   pure this(string s) {super(s);}
