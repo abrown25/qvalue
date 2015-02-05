@@ -121,7 +121,7 @@ class Opts{
       exit(0);
     }
 
-    if (args.length != 0 && input=="")
+    if (args.length > 1 && input=="")
       input = args[$ - 1];
     if (param != "")
       writeParam = true;

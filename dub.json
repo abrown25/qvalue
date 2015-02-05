@@ -5,6 +5,7 @@
     "authors": ["Andrew Brown"],
     "license": "GPL-3.0",
     "copyright": "2014 Genome Research Ltd.",
+    "targetType": "executable",
     "sourceFiles": ["spline.o"],
     "libs": ["gsl", "gslcblas"],
     "preGenerateCommands": ["gcc -c src/spline.c -o spline.o"],

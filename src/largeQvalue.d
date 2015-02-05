@@ -2,9 +2,9 @@ import std.algorithm : assumeSorted, makeIndex, min, reduce, reverse;
 import std.array : array, join;
 import std.math : exp, fabs, fmin, log, pow;
 import std.range : chunks, indexed, iota, zip;
-import std.stdio : File, stdout;
+import std.stdio : File, stdin, stdout;
 import std.string : chomp;
-
+import std.utf;
 import parse_arg;
 
 extern (C) {
@@ -211,9 +211,25 @@ void main(in string[] args){
   File inFile;
   File outFile;
   File paramFile;
-
+  File tmpFile;
+  bool tmp = false;
+  
   try{
-    inFile = File(opts.input);
+    if (opts.input == "")
+      {
+	tmp = true;
+	inFile = stdin;
+	import std.file : exists;
+	if ("largeqvalueTempFile0121616267818291".exists)
+	  {
+	    writeln("Temporary file \"largeqvalueTempFile0121616267818291\" exists, delete or rename this file, or do not take input from the stdin.");
+	    exit(0);	      
+	  }
+	else
+	  tmpFile = File("largeqvalueTempFile0121616267818291", "w");
+      }
+    else
+      inFile = File(opts.input);
     if (opts.outF == "")
       outFile = stdout;
     else
@@ -225,14 +241,16 @@ void main(in string[] args){
     exit(0);
   }
 
-
   double[] pVals;
 
   if (opts.header)
-    inFile.readln;
+    outFile.writeln(chomp(inFile.readln), "\tQvalue");
 
   foreach(ref line; inFile.byLine)
     {
+      if (tmp)
+	tmpFile.writeln(line);
+
       auto splitLine = line.split;
       try{
 	enforce(splitLine.length > opts.col - 1,
@@ -288,10 +306,17 @@ void main(in string[] args){
   foreach(ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
     qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
 
-  inFile.seek(0);
-
-  if (opts.header)
-    outFile.writeln(chomp(inFile.readln), "\tQvalue");
+  if (tmp)
+    {
+      tmpFile.close;
+      inFile = File("largeqvalueTempFile0121616267818291");
+    }
+  else
+    {
+      inFile.seek(0);
+      if (opts.header)
+	inFile.readln;
+    }
 
   size_t i = 0;
   foreach(ref line; inFile.byLine)
@@ -305,4 +330,7 @@ void main(in string[] args){
 	outFile.writeln(line, "\tNA");
       }
     }
+  import std.file : remove;
+  if (tmp)
+    "largeqvalueTempFile0121616267818291".remove;
 }
