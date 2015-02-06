@@ -1,6 +1,6 @@
 import std.algorithm : assumeSorted, makeIndex, min, reduce, reverse;
 import std.array : array, join;
-import std.math : exp, fabs, fmin, log, pow;
+import std.math : exp, fabs, fmin, isNaN, log, pow;
 import std.range : chunks, indexed, iota, zip;
 import std.stdio : File, stdin, stdout, tmpfile;
 import std.string : chomp;
@@ -235,7 +235,8 @@ void main(in string[] args){
   }
 
   double[] pVals;
-
+  double pVal;
+  
   if (opts.header)
     outFile.writeln(chomp(inFile.readln), "\tQvalue");
 
@@ -248,7 +249,9 @@ void main(in string[] args){
       try{
 	enforce(splitLine.length > opts.col - 1,
 		new InputException("Column with p values doesn't exist"));
-	pVals ~= to!double(splitLine[opts.col - 1]);
+	pVal = to!double(splitLine[opts.col - 1]);
+	if (!pVal.isNaN)
+	  pVals ~= pVal;
       } catch (ConvException e) {
       } catch (InputException e) {
 	writeln(e.msg);
@@ -307,9 +310,14 @@ void main(in string[] args){
 	{
 	  auto splitLine = line.split;
 	  try{
-	    to!double(splitLine[opts.col - 1]);
-	    outFile.writeln(line, "\t", qVal[i]);
-	    i++;
+	    pVal = to!double(splitLine[opts.col - 1]);
+	    if (!pVal.isNaN)
+	      {
+		outFile.writeln(line, "\t", qVal[i]);
+		i++;
+	      }
+	    else
+	      outFile.writeln(line, "\tNaN");
 	  } catch (ConvException e){
 	    outFile.writeln(line, "\tNA");
 	  }
@@ -325,9 +333,14 @@ void main(in string[] args){
 	{
 	  auto splitLine = line.split;
 	  try{
-	    to!double(splitLine[opts.col - 1]);
-	    outFile.writeln(line, "\t", qVal[i]);
-	    i++;
+	    pVal = to!double(splitLine[opts.col - 1]);
+	    if (!isNaN(pVal))
+	      {
+		outFile.writeln(line, "\t", qVal[i]);
+		i++;
+	      }
+	    else
+	      outFile.writeln(line, "\tNaN");
 	  } catch (ConvException e){
 	    outFile.writeln(line, "\tNA");
 	  }
