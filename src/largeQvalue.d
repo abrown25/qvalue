@@ -2,7 +2,7 @@ import std.algorithm : assumeSorted, makeIndex, min, reduce, reverse;
 import std.array : array, join;
 import std.math : exp, fabs, fmin, log, pow;
 import std.range : chunks, indexed, iota, zip;
-import std.stdio : File, stdin, stdout;
+import std.stdio : File, stdin, stdout, tmpfile;
 import std.string : chomp;
 import std.utf;
 import parse_arg;
@@ -219,14 +219,7 @@ void main(in string[] args){
       {
 	tmp = true;
 	inFile = stdin;
-	import std.file : exists;
-	if ("largeqvalueTempFile0121616267818291".exists)
-	  {
-	    writeln("Temporary file \"largeqvalueTempFile0121616267818291\" exists, delete or rename this file, or do not take input from the stdin.");
-	    exit(0);	      
-	  }
-	else
-	  tmpFile = File("largeqvalueTempFile0121616267818291", "w");
+	tmpFile = File.tmpfile();
       }
     else
       inFile = File(opts.input);
@@ -308,29 +301,36 @@ void main(in string[] args){
 
   if (tmp)
     {
-      tmpFile.close;
-      inFile = File("largeqvalueTempFile0121616267818291");
+      tmpFile.seek(0);
+      size_t i = 0;
+      foreach(ref line; tmpFile.byLine)
+	{
+	  auto splitLine = line.split;
+	  try{
+	    to!double(splitLine[opts.col - 1]);
+	    outFile.writeln(line, "\t", qVal[i]);
+	    i++;
+	  } catch (ConvException e){
+	    outFile.writeln(line, "\tNA");
+	  }
+	}
     }
   else
     {
       inFile.seek(0);
       if (opts.header)
 	inFile.readln;
+      size_t i = 0;
+      foreach(ref line; inFile.byLine)
+	{
+	  auto splitLine = line.split;
+	  try{
+	    to!double(splitLine[opts.col - 1]);
+	    outFile.writeln(line, "\t", qVal[i]);
+	    i++;
+	  } catch (ConvException e){
+	    outFile.writeln(line, "\tNA");
+	  }
+	}
     }
-
-  size_t i = 0;
-  foreach(ref line; inFile.byLine)
-    {
-      auto splitLine = line.split;
-      try{
-	to!double(splitLine[opts.col - 1]);
-	outFile.writeln(line, "\t", qVal[i]);
-	i++;
-      } catch (ConvException e){
-	outFile.writeln(line, "\tNA");
-      }
-    }
-  import std.file : remove;
-  if (tmp)
-    "largeqvalueTempFile0121616267818291".remove;
 }
