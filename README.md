@@ -24,10 +24,10 @@ The p values can be found in the 4th column of QTLresults.txt, write the results
 
 ### List of options:
 
-Usage: largeQvalue [options]
-Options:
-
 ```
+Usage: largeQvalue [options]
+
+Options:
     --help     : Print help and quit
     --version  : Print version and quit
     --header   : Input has header line (default = FALSE)
