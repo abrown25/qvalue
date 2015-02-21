@@ -36,9 +36,9 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
   immutable double minP = pi0.reduce!min;
 
   double[] probs;
-  probs ~= cast(double)pi0Count[0] / pVals.length;
+  probs ~= to!double(pi0Count[0]) / pVals.length;
   foreach(e; zip(pi0Count[0..($ - 1)], pi0Count[1..$]))  
-    probs ~= cast(double)(e[1] - e[0]) / pVals.length;
+    probs ~= to!double(e[1] - e[0]) / pVals.length;
 
   size_t[] bootCount = new size_t[lambda.length * 100];
   double[] bootPi0;
@@ -72,17 +72,17 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
   if (opts.writeParam)
     {
       paramFile.writeln("#The estimated value of π₀ is:            ", pi0Final, "\n");
-      paramFile.writeln("#λ values to calculate this were:         [", join(to!(string[])(lambda), ", "), "]\n\n",
-			"#with the corresponding π₀ values:        [", join(to!(string[])(pi0), ", "), "]\n\n",
-			"#and mean squared error estimates:        [", join(to!(string[])(mse), ", "), "]\n");
+      paramFile.writeln("#λ values to calculate this were:         [", lambda.to!(string[]).join(", "), "]\n\n",
+			"#with the corresponding π₀ values:        [", pi0.to!(string[]).join(", "), "]\n\n",
+			"#and mean squared error estimates:        [", mse.to!(string[]).join(", "), "]\n");
       paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀");
       paramFile.writeln("
-plot.pi0.data <- data.frame(x = rep(c(", join(to!(string[])(lambda), ", "), "), 100),
-                            y = c(", join(to!(string[])(bootPi0), ", "), "))");
+plot.pi0.data <- data.frame(x = rep(c(", lambda.to!(string[]).join(", "), "), 100),
+                            y = c(", bootPi0.to!(string[]).join(", "), "))");
       paramFile.writeln("
-plot.data <- data.frame(x = c(", join(to!(string[])(lambda), ", "), "),
-                        y = c(", join(to!(string[])(pi0), ", "), "),
-                        mse = c(", join(to!(string[])(mse), ", "),"),
+plot.data <- data.frame(x = c(", lambda.to!(string[]).join(", "), "),
+                        y = c(", pi0.to!(string[]).join(", "), "),
+                        mse = c(", mse.to!(string[]).join(", "), "),
                         minpi0 = ", minP, ",
                         final = ", pi0Final, ")
 
@@ -154,13 +154,13 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
   if (opts.writeParam)
     {
       paramFile.writeln("#The estimated value of π₀ is:         ", pi0Final, "\n");
-      paramFile.writeln("#λ values to calculate this were:      [", join(to!(string[])(lambda), ", "), "]\n\n",
-			"#with the corresponding π₀ values:     [", join(to!(string[])(pi0), ", "), "]\n\n",
-			"#and spline-smoothed π₀ values:        [", join(to!(string[])(pi0Est), ", "), "]\n");
+      paramFile.writeln("#λ values to calculate this were:      [", lambda.to!(string[]).join(", "), "]\n\n",
+			"#with the corresponding π₀ values:     [", pi0.to!(string[]).join(", "), "]\n\n",
+			"#and spline-smoothed π₀ values:        [", pi0Est.to!(string[]).join(", "), "]\n");
       paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of π₀\n
-plot.data <- data.frame(lambda = c(", join(to!(string[])(lambda), ", "), "),
-                        pi0 = c(", join(to!(string[])(pi0), ", "), "),
-                        pi0Est = c(", join(to!(string[])(pi0Est), ", "), "))\n");
+plot.data <- data.frame(lambda = c(", lambda.to!(string[]).join(", "), "),
+                        pi0 = c(", pi0.to!(string[]).join(", "), "),
+                        pi0Est = c(", pi0Est.to!(string[]).join(", "), "))\n");
       paramFile.writeln("qvalEst = smooth.spline(plot.data$lambda, plot.data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
 print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
       paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");
@@ -206,7 +206,7 @@ void main(in string[] args){
       exit(0);
     }
 
-  Opts opts = new Opts(cast(string[])args);
+  Opts opts = new Opts(to!(string[])(args));
 
   File inFile;
   File outFile;
