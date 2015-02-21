@@ -6,8 +6,6 @@ Given a whitespace separated table (specified by --input or as the last option o
 
 ### Binaries
 
-Latest binary for 64bit Linux can be found here:
-
 The binary for 64bit linux can be found here:
 
 ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue.tar.gz
