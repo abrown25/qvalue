@@ -1,5 +1,7 @@
-Figure 1a: An example diagnostic plot when π₀ is estimated using splines
+Figure 1a
 ======================================================
+
+This figure shows an example diagnostic plot when π₀ is estimated by fitting splines.
 
 ```
 #The estimated value of π₀ is:         0.371051
@@ -34,8 +36,10 @@ print(plot1)
 dev.off()
 ```
 
-Figure 1b: An example diagnostic plot when π₀ is estimated using bootstrap samples of the P values
+Figure 1b
 ======================================================
+
+This figure shows an example diagnostic plot when π₀ is estimated using bootstrap samples of the P values.
 
 ```
 #The estimated value of π₀ is:            0.350538
@@ -72,8 +76,10 @@ print(plot1)
 dev.off()
 ```
 
-Figure 2: Timings comparison with R package
+Figure 2
 ======================================================
+
+This figure compares running times with the R package.
 
 ```
 library(ggplot2)
@@ -96,8 +102,10 @@ ggplot(plot.data, aes(y = CPU, x = PValues, col=Software)) + geom_line() +
 dev.off()
 ```
 
-A supplementary figure not used in paper as results were not reliable. Compares memory use of packages.
+Supplementary figure (not used in paper)
 ======================================================
+
+This figure was going to compare memory use of R package with largeQvalue, but I didn't trust the results.
 
 ```
 ## rm(list=ls(all=T))
