@@ -8,6 +8,7 @@
     "targetType": "executable",
     "sourceFiles": ["spline.o"],
     "libs": ["gsl", "gslcblas"],
+    "targetName": "largeQvalue",
     "preGenerateCommands": ["gcc -c src/spline.c -o spline.o"],
     "postBuildCommands": ["rm *.o"]
 }
