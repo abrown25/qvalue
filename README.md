@@ -30,11 +30,11 @@ Options:
     --version  : Print version and quit
     --header   : Input has header line (default = FALSE)
     --boot     : Apply bootstrap method to find pi0 (default = FALSE)
-    --coef     : Set the number of coefficients used to fit cubic spline (default = 5, must be greater than 3)
+    --df       : Number of degrees of freedom used by the spline to estimate pi0 (default = 3)
     --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
     --log      : Smoothing spline applied to log pi0 values (default = FALSE)
     --robust   : More robust values for small p values (default = FALSE)
-    --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
+    --pi0      : Use value of pi0 given
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
     --param    : Print out parameter list to given file
     --out      : File to write results to (default = stdout)

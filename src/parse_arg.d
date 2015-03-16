@@ -14,11 +14,11 @@ Options:
     --version  : Print version and quit
     --header   : Input has header line (default = FALSE)
     --boot     : Apply bootstrap method to find pi0 (default = FALSE)
-    --coef     : Set the number of coefficients used to fit cubic spline (default = 5, must be greater than 3)
+    --df       : Number of degrees of freedom used by the spline to estimate pi0 (default = 3)
     --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
     --log      : Smoothing spline applied to log pi0 values (default = FALSE)
     --robust   : More robust values for small p values (default = FALSE)
-    --pi0      : Use value of pi0 given (useful for recreating qvalue package results)
+    --pi0      : Use value of pi0 given
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
     --param    : Print out parameter list to given file
     --out      : File to write results to (default = stdout)
@@ -27,7 +27,7 @@ Options:
     --col      : Column with p values (default = 1)
 ";
 
-static immutable string versionString = "largeQvalue: version 1.0.0";
+static immutable string versionString = "largeQvalue: version 1.0.1";
 
 class InputException : Exception
 {
@@ -53,7 +53,7 @@ class Opts
     double lambdaStart;
     double lambdaEnd;
     double lambdaStep;
-    int ncoeff = 5;
+    double df = 3;
     size_t col = 1;
     size_t seed;
     string input = "";
@@ -67,8 +67,8 @@ class Opts
         {
             getopt(args, "help", &help, "version", &version_, "header",
                 &header, "boot", &boot, "log", &logSmooth, "robust", &robust,
-                "issorted", &issorted, "pi0", &pi0, "lambda", &lambda, "coef",
-                &ncoeff, "col", &col, "seed", &seed, "input", &input, "param",
+                "issorted", &issorted, "pi0", &pi0, "lambda", &lambda, "df",
+                &df, "col", &col, "seed", &seed, "input", &input, "param",
                 &param, "out", &outF);
         }
         catch (Exception e)
@@ -79,7 +79,6 @@ class Opts
 
         try
         {
-            enforce(ncoeff > 3, new InputException("At least 4 coefficients required for splines"));
         }
         catch (InputException e)
         {
@@ -102,10 +101,12 @@ class Opts
             {
                 lambdaStep = lambdaOpts[2];
                 lambdaEnd = lambdaOpts[1] + lambdaStep;
-                enforce(lambdaEnd > lambdaStart + ncoeff * lambdaStep,
+                enforce(lambdaEnd > lambdaStart + df * lambdaStep,
                     new InputException("Lambda sequence too short to estimate splines"));
                 enforce(lambdaStart >= 0 && lambdaEnd < 1, new InputException(
                     "Lambda values must lie within [0, 1) interval"));
+		enforce(df >= 1 && df < (lambdaEnd - lambdaStart) / lambdaStep,
+			new InputException("df must be between 1 and length of lambda"));
             }
         }
         catch (ConvException e)

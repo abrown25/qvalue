@@ -1,7 +1,13 @@
-largeQvalue : src/largeQvalue.d src/parse_arg.d src/bootstrap.c src/spline_fit.c src/bsplvd.f src/bvalue.f src/bvalus.f src/sgram.f src/sinerp.f src/sslvrg.f src/stxwx.f
-	gcc -I /usr/include/R -c src/bootstrap.c src/spline_fit.c src/bsplvd.f src/bvalue.f src/bvalus.f src/sgram.f src/sinerp.f src/sslvrg.f src/stxwx.f
-	gdc src/largeQvalue.d src/parse_arg.d bootstrap.o bsplvd.o bvalue.o bvalus.o sgram.o sinerp.o spline_fit.o sslvrg.o stxwx.o -L /usr/lib/R/lib/ -lR -lgsl -lgslcblas -lm -o largeQvalue
-	rm *o
+SOURCES_C = src/bootstrap.c src/spline_fit.c
+SOURCES_D = src/largeQvalue.d src/parse_arg.d
+SOURCES_F = src/bsplvd.f src/bvalue.f src/bvalus.f src/sgram.f src/sinerp.f src/sslvrg.f src/stxwx.f
+OBJECTS = $(SOURCES_C:.c=.o) $(SOURCES_F:.f=.o)
+
+largeQvalue : $(SOURCES_C) $(SOURCES_D) $(SOURCES_F)
+	gcc -I /usr/include/R -c $(SOURCES_C) $(SOURCES_F)
+	mv *o src/
+	gdc $(SOURCES_D) $(OBJECTS) -L /usr/lib/R/lib/ -lR -lgsl -lgslcblas -lm -o largeQvalue
+	rm src/*o
 
 dmd : src/spline.c  src/largeQvalue.d src/parse_arg.d
 	gcc -c  src/spline.c -o spline.o

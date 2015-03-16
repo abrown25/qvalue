@@ -102,7 +102,7 @@ print(plot1)
 
 double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile)
 {
-  import std.algorithm : map;
+    import std.algorithm : map;
     double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
     double[] pi0;
     size_t[] pi0Count;
@@ -123,7 +123,7 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
                 e = log(e);
 	double[] xs = lambda.map!(a => a / (lambda[$ - 1] - lambda[0])).array;
 	double[] knot = [0.0, 0.0, 0.0] ~ xs ~ [1.0, 1.0, 1.0];
-	splineFit(xs.ptr, pi0.ptr, knot.ptr, lambda.length.to!int, opts.ncoeff.to!double, pi0Est.ptr);
+	splineFit(xs.ptr, pi0.ptr, knot.ptr, lambda.length.to!int, opts.df, pi0Est.ptr);
 
         if (opts.logSmooth)
         {

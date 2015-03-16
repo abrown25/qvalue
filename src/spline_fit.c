@@ -250,7 +250,6 @@ void sbart
 /* main loop
    --------- */
    while(*ier == 0) { /* L20: */
-    /* for (fuck = 0; fuck < 100; ++fuck){ */
       xm = (a + b) * .5;
       tol1 = *eps * fabs(x) + *tol / 3.;
       tol2 = tol1 * 2.;
