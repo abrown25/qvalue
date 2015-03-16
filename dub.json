@@ -7,7 +7,7 @@
     "copyright": "2014 Genome Research Ltd.",
     "targetType": "executable",
     "sourceFiles": ["spline.o"],
-    "libs": ["gsl", "gslcblas"],
+    "libs": ["gsl", "gslcblas", "R", "gfortran"],
     "targetName": "largeQvalue",
     "preGenerateCommands": ["gcc -c src/spline.c -o spline.o"],
     "postBuildCommands": ["rm *.o", "strip largeQvalue"]

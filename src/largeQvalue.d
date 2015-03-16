@@ -18,6 +18,12 @@ extern (C)
     void splineFit(double* lambda, double* pi0, double* pi0Est, size_t length, int ncoeff);
 }
 
+extern(C)
+{
+  void spline_fit(double* xs, double* ys, double* knot, int n, double dofoff, double* results);
+}
+
+
 double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile)
 {
     double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
@@ -101,6 +107,7 @@ print(plot1)
 
 double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile)
 {
+  import std.algorithm : map;
     double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
     double[] pi0;
     size_t[] pi0Count;
@@ -119,8 +126,9 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
         if (opts.logSmooth)
             foreach (ref e; pi0)
                 e = log(e);
-
-        splineFit(lambda.ptr, pi0.ptr, pi0Est.ptr, lambda.length, opts.ncoeff);
+	double[] xs = lambda.map!(a => a / (lambda[$ - 1] - lambda[0])).array;
+	double[] knot = [0.0, 0.0, 0.0] ~ xs ~ [1.0, 1.0, 1.0];
+	spline_fit(xs.ptr, pi0.ptr, knot.ptr, lambda.length.to!int, opts.ncoeff.to!double, pi0Est.ptr);
 
         if (opts.logSmooth)
         {

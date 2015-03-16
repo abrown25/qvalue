@@ -113,7 +113,7 @@ void sbart
 
     int i, maxit;
     bool Fparabol = false;
-    bool tracing = true;
+    bool tracing = false;
 
     /* unnecessary initializations to keep  -Wall happy */
     d = 0.; fu = 0.; u = 0.;
@@ -390,33 +390,21 @@ void sbart
 void spline_fit(double* xs, double* ys, double* knot, int n, double dofoff, double* results){
 								  
   double penalt = 1;
-  /* double dofoff = 3; */
   int i;
-  /* double* xs = (double *)malloc(sizeof(double) * 19); */
-  /* double* ys = (double *)malloc(sizeof(double) * 19); */
   double* ws = (double *)malloc(sizeof(double) * n);
-  /* double xstemp[19] = {0.0, 0.05555556, 0.11111111, 0.16666667, 0.22222222, 0.27777778, 0.33333333, 0.38888889, 0.44444444, 0.50000000, 0.55555556, 0.61111111, 0.66666667, 0.72222222, 0.77777778, 0.83333333, 0.88888889, 0.94444444, 1.0}; */
-  /* double ystemp[19] = {1.0, 0.445501, 0.439427, 0.432638, 0.431452, 0.419355, 0.418433, 0.415881, 0.409677, 0.403519, 0.394194, 0.397133, 0.393548, 0.385253, 0.378495, 0.370323, 0.362903, 0.350538, 0.348387}; */
   for (i=0; i < n; ++i)
     {
       ws[i] = 1;
-      /* xs[i] = xstemp[i]; */
-      /* ys[i] = ystemp[i]; */
     }
   double ssw = 0;
-  /* int n = 19; */
   int nk = n + 2;
   double* coef = (double *)malloc(sizeof(double) * (n + 2));
   double* sz = (double *)malloc(sizeof(double) * (n + 2));
   double* lev = (double *)malloc(sizeof(double) * n);
-  /* double* knot = (double *)malloc(sizeof(double) * (n + 6)); */
-  /* double knottemp[25] = {0.0, 0.0, 0.0, 0.0, 0.05555556, 0.11111111, 0.16666667, 0.22222222, 0.27777778, 0.33333333, 0.38888889, 0.44444444, 0.50000000, 0.55555556, 0.61111111, 0.66666667, 0.72222222, 0.77777778, 0.83333333, 0.88888889, 0.94444444, 1.0, 1.0, 1.0, 1.0}; */
-  /* for (i = 0; i < 25 ; ++i) */
-  /*   knot[i] = knottemp[i]; */
   double crit = 0;
   int icrit = 3;
   double spar = 0.0;
-  int ispar = -1;
+  int ispar = 0;
   int iter = 500;
   double lspar = 0;
   double uspar = 1;
@@ -438,7 +426,6 @@ void spline_fit(double* xs, double* ys, double* knot, int n, double dofoff, doub
   int ld4 = 4;
   int ldnk = 1;
   int ier = 1;
-  /* double * results = (double *)malloc(sizeof(double) * n); */
   int order = 0;
 sbart
     (&penalt, &dofoff,
@@ -451,9 +438,6 @@ sbart
      hs3, sg0, sg1, sg2,
      sg3, abd, p1ip, p2ip,
      &ld4, &ldnk, &ier);
- printf("%g\n", spar);
  F77_CALL(bvalus)(&n, knot, coef, &nk, xs, results, &order);
- for (i = 0; i < 19; ++i)
-   printf("%g\t%g\n", results[i], coef[i]);
 
 }
