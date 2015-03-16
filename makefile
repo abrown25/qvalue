@@ -1,17 +1,15 @@
-SOURCES_C = src/bootstrap.c src/spline_fit.c src/interv.c
 SOURCES_D = src/largeQvalue.d src/parse_arg.d
-SOURCES_F = src/bsplvd.f src/bvalue.f src/bvalus.f src/dpbfa.f src/dpbsl.f src/sgram.f src/sinerp.f src/sslvrg.f src/stxwx.f
-OBJECTS = $(SOURCES_C:.c=.o) $(SOURCES_F:.f=.o)
 
-largeQvalue : $(SOURCES_C) $(SOURCES_D) $(SOURCES_F)
-	gcc -I /usr/include/R -c $(SOURCES_C) $(SOURCES_F)
-	mv *o src/
-	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) $(OBJECTS) -lblas -lgsl -lgslcblas -lm -o largeQvalue
-	rm src/*o
+largeQvalue : $(SOURCES_D) src/bootstrap.c src/libspline.a
+	gcc -c src/bootstrap.c -o src/bootstrap.o
+	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) src/bootstrap.o src/libspline.a -lblas -lgsl -lgslcblas -lm -o largeQvalue
+	rm -f src/bootstrap.o largeQvalue.o
+	strip largeQvalue
 
-dmd : src/spline.c  src/largeQvalue.d src/parse_arg.d
-	gcc -c  src/spline.c -o spline.o
-	dmd -release -noboundscheck -inline -O  src/largeQvalue.d  src/parse_arg.d spline.o -L-lgsl -L-lgslcblas
+src/libspline.a : src/spline_src/bsplvd.f src/spline_src/bvalue.f src/spline_src/bvalus.f src/spline_src/dpbfa.f src/spline_src/dpbsl.f src/spline_src/interv.c src/spline_src/modreg.h src/spline_src/sgram.f src/spline_src/sinerp.f src/spline_src/spline_fit.c src/spline_src/sslvrg.f src/spline_src/stxwx.f
+	gcc -I/usr/include/R -c src/spline_src/bsplvd.f src/spline_src/bvalue.f src/spline_src/bvalus.f src/spline_src/dpbfa.f src/spline_src/dpbsl.f src/spline_src/interv.c src/spline_src/sgram.f src/spline_src/sinerp.f src/spline_src/spline_fit.c src/spline_src/sslvrg.f src/spline_src/stxwx.f
+	ar rcs src/libspline.a bsplvd.o bvalue.o bvalus.o dpbfa.o dpbsl.o interv.o sgram.o sinerp.o spline_fit.o sslvrg.o stxwx.o
+	rm -f bsplvd.o bvalue.o bvalus.o dpbfa.o dpbsl.o interv.o sgram.o sinerp.o spline_fit.o sslvrg.o stxwx.o
 
 .PHONY : sample clean boot
 

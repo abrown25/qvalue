@@ -6,9 +6,10 @@
     "license": "GPL-3.0",
     "copyright": "2014 Genome Research Ltd.",
     "targetType": "executable",
-    "sourceFiles": ["spline.o"],
-    "libs": ["gsl", "gslcblas", "R", "gfortran"],
+    "sourceFiles": ["src/bootstrap.o", "src/libspline.a"],
+    "libs": ["gsl", "gslcblas", "m", "blas"],
     "targetName": "largeQvalue",
-    "preGenerateCommands": ["gcc -c src/spline.c -o spline.o"],
-    "postBuildCommands": ["rm *.o", "strip largeQvalue"]
+    "preGenerateCommands": ["gcc -c src/bootstrap.c -o src/bootstrap.o"],
+    "postBuildCommands": ["rm src/*.o",
+			  "strip largeQvalue"]
 }
