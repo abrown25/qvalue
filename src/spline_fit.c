@@ -20,10 +20,7 @@
 
  is itself called from	 qsbart() [./qsbart.f]	 which has only one work array
 */
-/*
-penalty = 1, dofoff = 3, n = length(x), ys = y, xs = x / range(x), ssw = 0, nk = n + 2, knot = xbar, first and last repeated 4 times, spar = 0, ispar = 0, lspar = -1.5, uspar = 1.5, tol = 1e-4, eps = 2e-8, isetup = 0
-icrit = 3, ld4=4, ldnk = 1, ier = 1
- */
+
 void sbart
     (double *penalt, double *dofoff,
      double *xs, double *ys, double *ws, double *ssw,
