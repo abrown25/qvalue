@@ -4,9 +4,8 @@
  * According to the GAMFIT sources, this was derived from code by
  * Finbarr O'Sullivan.
  */
-#include <R.h>
-#include <Rmath.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "modreg.h"
 
@@ -20,6 +19,10 @@
 
  is itself called from	 qsbart() [./qsbart.f]	 which has only one work array
 */
+double trans_sign(double x, double y)
+{
+  return ((y >= 0) ? fabs(x) : -fabs(x));
+}
 
 void sbart
     (double *penalt, double *dofoff,
@@ -149,7 +152,7 @@ void sbart
 /*     Compute estimate */
 
     if (*ispar == 1) { /* Value of spar supplied */
-	*lspar = ratio * R_pow(16., *spar * 6. - 2.);
+	*lspar = ratio * pow(16., *spar * 6. - 2.);
 	F77_CALL(sslvrg)(penalt, dofoff, xs, ys, ws, ssw, n,
 			 knot, nk,
 			 coef, sz, lev, crit, icrit, lspar, xwy,
@@ -233,7 +236,7 @@ void sbart
     x = v;
     e = 0.;
     *spar = x;
-    *lspar = ratio * R_pow(16., *spar * 6. - 2.);
+    *lspar = ratio * pow(16., *spar * 6. - 2.);
     F77_CALL(sslvrg)(penalt, dofoff, xs, ys, ws, ssw, n,
 		     knot, nk,
 		     coef, sz, lev, crit, icrit, lspar, xwy,
@@ -314,14 +317,11 @@ void sbart
 
 	if(tracing) printf(" PI ");
 	d = p / q;
-	if(!R_FINITE(d))
-	    printf(" !FIN(d:=p/q): ier=%d, (v,w, p,q)= %g, %g, %g, %g\n",
-		     *ier, v,w, p, q);
 	u = x + d;
 
 	/* f must not be evaluated too close to ax or bx */
 	if (u - a < tol2 ||
-	    b - u < tol2)	d = fsign(tol1, xm - x);
+	    b - u < tol2)	d = trans_sign(tol1, xm - x);
 
 	goto L50;
 	/*------*/
@@ -336,11 +336,11 @@ void sbart
 
 
     L50:
-	u = x + ((fabs(d) >= tol1) ? d : fsign(tol1, d));
+	u = x + ((fabs(d) >= tol1) ? d : trans_sign(tol1, d));
 	/*  tol1 check : f must not be evaluated too close to x */
 
 	*spar = u;
-	*lspar = ratio * R_pow(16., *spar * 6. - 2.);
+	*lspar = ratio * pow(16., *spar * 6. - 2.);
 	F77_CALL(sslvrg)(penalt, dofoff, xs, ys, ws, ssw, n,
 			 knot, nk,
 			 coef, sz, lev, crit, icrit, lspar, xwy,
@@ -349,7 +349,7 @@ void sbart
 			 p1ip, p2ip, ld4, ldnk, ier);
 	fu = *crit;
 	if(tracing) printf("%11g %12g\n", *lspar, CRIT(fu));
-	if(!R_FINITE(fu)) {
+	if(fu > 2. * BIG_f) {
 	    printf("spar-finding: non-finite value %g; using BIG value\n", fu);
 	    fu = 2. * BIG_f;
 	}

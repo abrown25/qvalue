@@ -1,12 +1,12 @@
-SOURCES_C = src/bootstrap.c src/spline_fit.c
+SOURCES_C = src/bootstrap.c src/spline_fit.c src/interv.c
 SOURCES_D = src/largeQvalue.d src/parse_arg.d
-SOURCES_F = src/bsplvd.f src/bvalue.f src/bvalus.f src/sgram.f src/sinerp.f src/sslvrg.f src/stxwx.f
+SOURCES_F = src/bsplvd.f src/bvalue.f src/bvalus.f src/dpbfa.f src/dpbsl.f src/sgram.f src/sinerp.f src/sslvrg.f src/stxwx.f
 OBJECTS = $(SOURCES_C:.c=.o) $(SOURCES_F:.f=.o)
 
 largeQvalue : $(SOURCES_C) $(SOURCES_D) $(SOURCES_F)
 	gcc -I /usr/include/R -c $(SOURCES_C) $(SOURCES_F)
 	mv *o src/
-	gdc $(SOURCES_D) $(OBJECTS) -L/usr/lib/R/lib/ -lR -lgsl -lgslcblas -lm -o largeQvalue
+	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) $(OBJECTS) -lblas -lgsl -lgslcblas -lm -o largeQvalue
 	rm src/*o
 
 dmd : src/spline.c  src/largeQvalue.d src/parse_arg.d

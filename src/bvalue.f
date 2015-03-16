@@ -88,7 +88,6 @@ c      (the asymmetry in this choice of  i  makes  f  rightcontinuous)
       if( (x.ne.t(n+1)) .or. (t(n+1).ne.t(n+k)) ) then
          i = interv ( t, n+k, x, 0, 0, i, mflag)
          if (mflag .ne. 0) then
-            call rwarn('bvalue()  mflag != 0: should never happen!')
             go to 99
          endif
       else
