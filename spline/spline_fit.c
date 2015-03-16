@@ -56,7 +56,7 @@ void sbart
    xs(n)	vector containing the ordinates of the observations
    ssw          `centered weighted sum of y^2'
    nk		number of b-spline coefficients to be estimated
-v		nk <= n+2
+		nk <= n+2
    knot(nk+4)	vector of knot points defining the cubic b-spline basis.
 		To obtain full cubic smoothing splines one might
 		have (provided the xs-values are strictly increasing)
@@ -86,9 +86,9 @@ v		nk <= n+2
 			problem in cholesky decomposition
 
  Working arrays/matrix
-   xwy			X'Wy
-   hs0,hs1,hs2,hs3	the diagonals of the X'WX matrix
-   sg0,sg1,sg2,sg3	the diagonals of the Gram matrix SIGMA
+   xwy(nk,nk)			X'Wy
+   hs0,hs1,hs2,hs3(nk)	the diagonals of the X'WX matrix
+   sg0,sg1,sg2,sg3(nk)	the diagonals of the Gram matrix SIGMA
    abd (ld4,nk)		[ X'WX + lambda*SIGMA ] in diagonal form
    p1ip(ld4,nk)		inner products between columns of L inverse
    p2ip(ldnk,nk)	all inner products between columns of L inverse
@@ -247,11 +247,10 @@ v		nk <= n+2
     fx = *crit;
     fv = fx;
     fw = fx;
-    int fuck;
 /* main loop
    --------- */
-   /* while(*ier == 0) { /\* L20: *\/ */
-    for (fuck = 0; fuck < 100; ++fuck){
+   while(*ier == 0) { /* L20: */
+    /* for (fuck = 0; fuck < 100; ++fuck){ */
       xm = (a + b) * .5;
       tol1 = *eps * fabs(x) + *tol / 3.;
       tol2 = tol1 * 2.;
@@ -277,8 +276,8 @@ v		nk <= n+2
 
 	/* Check the (somewhat peculiar) stopping criterion: note that
 	   the RHS is negative as long as the interval [a,b] is not small:*/
-	/* if (fabs(x - xm) <= tol2 - (b - a) * .5 || *iter > maxit) */
-	/*     goto L_End; */
+	if (fabs(x - xm) <= tol2 - (b - a) * .5 || *iter > maxit)
+	    goto L_End;
 
 
 /* is golden-section necessary */
@@ -424,15 +423,15 @@ void main(){
   double tol = 1e-4;
   double eps = 2e-8;
   int isetup = 0;
-  double xwy;
-  double hs0;
-  double hs1;
-  double hs2;
-  double hs3;
-  double sg0;
-  double sg1;
-  double sg2;
-  double sg3;
+  double* xwy = (double *)malloc(sizeof(double) * 21 * 21);
+  double* hs0 = (double *)malloc(sizeof(double) * 21);
+  double* hs1 = (double *)malloc(sizeof(double) * 21);
+  double* hs2 = (double *)malloc(sizeof(double) * 21);
+  double* hs3 = (double *)malloc(sizeof(double) * 21);
+  double* sg0 = (double *)malloc(sizeof(double) * 21);
+  double* sg1 = (double *)malloc(sizeof(double) * 21);
+  double* sg2 = (double *)malloc(sizeof(double) * 21);
+  double* sg3 = (double *)malloc(sizeof(double) * 21);
   double* abd = (double *)malloc(sizeof(double) * 4 * 21);
   double* p1ip = (double *)malloc(sizeof(double) * 4 * 21);
   double* p2ip = (double *)malloc(sizeof(double) * 21);
@@ -448,9 +447,9 @@ sbart
      sz, lev, &crit, &icrit,
      &spar, &ispar,  &iter, &lspar,
      &uspar, &tol, &eps, &isetup,
-     &xwy, &hs0, &hs1, &hs2,
-     &hs3, &sg0, &sg1, &sg2,
-     &sg3, abd, p1ip, p2ip,
+     xwy, hs0, hs1, hs2,
+     hs3, sg0, sg1, sg2,
+     sg3, abd, p1ip, p2ip,
      &ld4, &ldnk, &ier);
  printf("%g\n", spar);
  F77_CALL(bvalus)(&n, knot, coef, &nk, xs, out, &order);
