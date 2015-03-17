@@ -10,22 +10,22 @@ import std.stdio : stderr, writeln;
 
 static immutable string helpString = "Usage: largeQvalue [options]
 Options:
-    --help     : Print help and quit
-    --version  : Print version and quit
+    --help     : Print help and quit.
+    --version  : Print version and quit.
     --input    : File to take results from. Can also be specified by the last argument on the command-line after all others have been parsed. If not present, is taken to be the stdin.
-    --out      : File to write results to (default = stdout)
-    --param    : Print out parameter list to given file
-    --header   : Input has header line (default = FALSE)
-    --col      : Column with p values (default = 1)
+    --out      : File to write results to (default = stdout).
+    --param    : Print out parameter list to given file.
+    --header   : Input has header line (default = FALSE).
+    --col      : Column with p values (default = 1).
     --sep      : Separator to use to delimit the column with q values. Specified as either space or tab (which can be shortened to s or t), (default = tab).
-    --issorted : File has already been sorted with no missing values (default = FALSE)
-    --pi0      : Use value of pi0 given
-    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
-    --robust   : More robust values for small p values (default = FALSE)
-    --df       : Number of degrees of freedom used by the spline to estimate pi0 (default = 3)
-    --log      : Smoothing spline applied to log pi0 values (default = FALSE)
-    --boot     : Apply bootstrap method to find pi0 (default = FALSE)
-    --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default)
+    --issorted : File has already been sorted with no missing values (default = FALSE).
+    --pi0      : Use value of pi0 given.
+    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05).
+    --robust   : More robust values for small p values (default = FALSE).
+    --df       : Number of degrees of freedom used by the spline when estimating pi0 (default = 3).
+    --log      : Smoothing spline applied to log pi0 values (default = FALSE).
+    --boot     : Apply bootstrap method to find pi0 (default = FALSE).
+    --seed     : Set seed for generating bootstrap samples (default = 0, equivalent to GSL default).
 ";
 
 static immutable string versionString = "largeQvalue: version 1.0.1";
