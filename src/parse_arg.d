@@ -69,9 +69,9 @@ class Opts
         {
             getopt(args, "help", &help, "version", &version_, "header",
                 &header, "boot", &boot, "log", &logSmooth, "robust", &robust,
-		   "issorted", &issorted, "pi0", &pi0, "lambda", &lambda, "sep", &sep, "df",
-                &df, "col", &col, "seed", &seed, "input", &input, "param",
-                &param, "out", &outF);
+                "issorted", &issorted, "pi0", &pi0, "lambda", &lambda, "sep",
+                &sep, "df", &df, "col", &col, "seed", &seed, "input",
+                &input, "param", &param, "out", &outF);
         }
         catch (Exception e)
         {
@@ -94,12 +94,12 @@ class Opts
             {
                 lambdaStep = lambdaOpts[2];
                 lambdaEnd = lambdaOpts[1] + lambdaStep;
-                enforce(lambdaEnd > lambdaStart + df * lambdaStep,
-                    new InputException("Lambda sequence too short to estimate splines"));
+                enforce(lambdaEnd > lambdaStart + df * lambdaStep, new InputException(
+                    "Lambda sequence too short to estimate splines"));
                 enforce(lambdaStart >= 0 && lambdaEnd < 1, new InputException(
                     "Lambda values must lie within [0, 1) interval"));
-		enforce(df >= 1 && df < (lambdaEnd - lambdaStart) / lambdaStep,
-			new InputException("df must be between 1 and length of lambda"));
+                enforce(df >= 1 && df < (lambdaEnd - lambdaStart) / lambdaStep,
+                    new InputException("df must be between 1 and length of lambda"));
             }
         }
         catch (ConvException e)
@@ -112,16 +112,16 @@ class Opts
             stderr.writeln(e.msg);
             exit(0);
         }
-	
-	if (sep=="s" || sep =="space")
-	  sep = " ";
-	else
-	  {
-	    if (sep!="t" && sep!="tab")
-	      stderr.writeln("--sep misspecified, defaulting to tab.");
-	    sep = "\t";
-	  }
-	
+
+        if (sep == "s" || sep == "space")
+            sep = " ";
+        else
+        {
+            if (sep != "t" && sep != "tab")
+                stderr.writeln("--sep misspecified, defaulting to tab.");
+            sep = "\t";
+        }
+
         try
         {
             enforce(pi0.isNaN || (pi0 > 0 && pi0 <= 1),

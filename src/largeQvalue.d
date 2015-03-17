@@ -13,11 +13,10 @@ extern (C)
         size_t seed);
 }
 
-extern(C)
+extern (C)
 {
-  void splineFit(double* xs, double* ys, double* knot, int n, double dofoff, double* results);
+    void splineFit(double* xs, double* ys, double* knot, int n, double dofoff, double* results);
 }
-
 
 double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile)
 {
@@ -74,8 +73,9 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
         paramFile.writeln("#The estimated value of π₀ is:            ", pi0Final, "\n");
         paramFile.writeln("#λ values to calculate this were:         [", lambda.to!(string[]).join(", "), "]\n\n",
 			  "#with the corresponding π₀ values:        [", pi0.to!(string[]).join(", "), "]\n\n",
-            "#and mean squared error estimates:        [", mse.to!(string[]).join(", "), "]\n");
-        paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀:\n");
+			  "#and mean squared error estimates:        [", mse.to!(string[]).join(", "), "]\n");
+        paramFile.writeln(
+			  "###R code to produce diagnostic plots for bootstrap estimates of π₀:\n");
         paramFile.writeln("plot.pi0.data <- data.frame(x = rep(c(", lambda.to!(string[]).join(", "), "), 100),
                             y = c(", bootPi0.to!(string[]).join(", "), "))\n");
         paramFile.writeln("plot.data <- data.frame(x = c(", lambda.to!(string[]).join(", "), "),
@@ -103,6 +103,7 @@ print(plot1)
 double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File paramFile)
 {
     import std.algorithm : map;
+
     double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
     double[] pi0;
     size_t[] pi0Count;
@@ -111,7 +112,8 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
     pi0Count ~= pVals.indexed(orderIndex).assumeSorted.lowerBound(lambda[0]).length;
 
     foreach (ref e; 1 .. lambda.length)
-        pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $]).assumeSorted.lowerBound(lambda[e]).length;
+        pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $]).assumeSorted.lowerBound(
+            lambda[e]).length;
 
     foreach (i, ref e; pi0Count)
         pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
@@ -121,9 +123,9 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
         if (opts.logSmooth)
             foreach (ref e; pi0)
                 e = log(e);
-	double[] xs = lambda.map!(a => a / (lambda[$ - 1] - lambda[0])).array;
-	double[] knot = [0.0, 0.0, 0.0] ~ xs ~ [1.0, 1.0, 1.0];
-	splineFit(xs.ptr, pi0.ptr, knot.ptr, lambda.length.to!int, opts.df, pi0Est.ptr);
+        double[] xs = lambda.map!(a => a / (lambda[$ - 1] - lambda[0])).array;
+        double[] knot = [0.0, 0.0, 0.0] ~ xs ~ [1.0, 1.0, 1.0];
+        splineFit(xs.ptr, pi0.ptr, knot.ptr, lambda.length.to!int, opts.df, pi0Est.ptr);
 
         if (opts.logSmooth)
         {
@@ -152,9 +154,8 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
     {
         paramFile.writeln("#The estimated value of π₀ is:         ", pi0Final, "\n");
         paramFile.writeln("#λ values to calculate this were:      [", lambda.to!(string[]).join(", "), "]\n\n",
-            "#with the corresponding π₀ values:     [", pi0.to!(string[]).join(
-            ", "), "]\n\n", "#and spline-smoothed π₀ values:        [", pi0Est.to!(
-            string[]).join(", "), "]\n");
+			  "#with the corresponding π₀ values:     [", pi0.to!(string[]).join(", "), "]\n\n",
+			  "#and spline-smoothed π₀ values:        [", pi0Est.to!(string[]).join(", "), "]\n");
         paramFile.writeln("###R code to produce diagnostic plots for spline estimates of π₀:\n
 plot.data <- data.frame(lambda = c(", lambda.to!(string[]).join(", "), "),
                         pi0 = c(", pi0.to!(string[]).join(", "), "),
@@ -186,7 +187,9 @@ pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double 
         {
             foreach (ref j; orderIndex[(i - dupcount + 1) .. (i + 1)])
                 if (robust)
-                    qVal[j] = pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[j], len)));
+                    qVal[j] = pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[
+                        j
+                    ], len)));
                 else
                     qVal[j] = pi0 * pVal[j] * len / (i + 1);
             dupcount = 0;
@@ -327,11 +330,11 @@ void main(in string[] args)
                     i++;
                 }
                 else
-		  outFile.writeln(line, sep, "NaN");
+                    outFile.writeln(line, sep, "NaN");
             }
             catch (ConvException e)
             {
-	      outFile.writeln(line, sep, "NA");
+                outFile.writeln(line, sep, "NA");
             }
         }
     }
@@ -353,11 +356,11 @@ void main(in string[] args)
                     i++;
                 }
                 else
-		  outFile.writeln(line, sep, "NaN");
+                    outFile.writeln(line, sep, "NaN");
             }
             catch (ConvException e)
             {
-	      outFile.writeln(line, sep, "NA");
+                outFile.writeln(line, sep, "NA");
             }
         }
     }
