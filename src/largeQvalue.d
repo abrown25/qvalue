@@ -75,7 +75,7 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
         paramFile.writeln("#λ values to calculate this were:         [", lambda.to!(string[]).join(", "), "]\n\n",
 			  "#with the corresponding π₀ values:        [", pi0.to!(string[]).join(", "), "]\n\n",
             "#and mean squared error estimates:        [", mse.to!(string[]).join(", "), "]\n");
-        paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀\n");
+        paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀:\n");
         paramFile.writeln("plot.pi0.data <- data.frame(x = rep(c(", lambda.to!(string[]).join(", "), "), 100),
                             y = c(", bootPi0.to!(string[]).join(", "), "))\n");
         paramFile.writeln("plot.data <- data.frame(x = c(", lambda.to!(string[]).join(", "), "),
@@ -155,14 +155,10 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
             "#with the corresponding π₀ values:     [", pi0.to!(string[]).join(
             ", "), "]\n\n", "#and spline-smoothed π₀ values:        [", pi0Est.to!(
             string[]).join(", "), "]\n");
-        paramFile.writeln("###R code to produce diagnostic plots and qvalue package estimate of π₀\n
+        paramFile.writeln("###R code to produce diagnostic plots for spline estimates of π₀:\n
 plot.data <- data.frame(lambda = c(", lambda.to!(string[]).join(", "), "),
                         pi0 = c(", pi0.to!(string[]).join(", "), "),
                         pi0Est = c(", pi0Est.to!(string[]).join(", "), "))\n");
-        paramFile.writeln("qvalEst = smooth.spline(plot.data$lambda, plot.data$pi0, df = 3)$y ## replace 3 if different degrees of freedom is required\n
-print(paste(c(\"Estimate of pi0 from qvalue package is:\", qvalEst[length(qvalEst)]), collapse = ' '))\n");
-        paramFile.writeln("### Code to draw diagnostic plots with ggplot2\n");
-
         paramFile.writeln("library(ggplot2)
 plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
                                                               geom_line(aes(x = lambda, y = pi0Est)) +

@@ -41,7 +41,7 @@ $^\dagger$NORMENT, KG Jebsen Centre for Psychosis Research, Institute of Clinica
 \linespread{1.6}
 
 \begin{abstract}
-This is an implementation of the R statistical software qvalue package \citep{qvalue}, designed for use with large datasets where memory or computation time is limiting. In addition to estimating p values adjusted for multiple testing, the software outputs a script which can be pasted into R to produce diagnostic plots and parameter estimates. This program runs almost 30 times faster and requests substantially less memory than the qvalue package when analysing 10 million p values on a high performance cluster. The software has been used to control for the multiple testing of 390 million tests when analysing a full cis scan of RNA-seq exon level gene expression from the Eurobats project \citep{brownepistasis}. The source code and links to executable files for linux and Mac OSX can be found here: \url{https://github.com/abrown25/qvalue}. Help for the package can be found by running \texttt{./largeQvalue --help}. 
+This is an implementation of the R statistical software qvalue package \citep{qvalue}, designed for use with large datasets where memory or computation time is limiting. In addition to estimating p values adjusted for multiple testing, the software outputs a script which can be pasted into R to produce diagnostic plots and report parameter estimates. This program runs almost 30 times faster and requests substantially less memory than the qvalue package when analysing 10 million p values on a high performance cluster. The software has been used to control for the multiple testing of 390 million tests when analysing a full cis scan of RNA-seq exon level gene expression from the Eurobats project \citep{brownepistasis}. The source code and links to executable files for linux and Mac OSX can be found here: \url{https://github.com/abrown25/qvalue}. Help for the package can be found by running \texttt{./largeQvalue --help}.
 \end{abstract}
 
 \bigskip
@@ -73,11 +73,11 @@ The quantity $\pi_0$ is the proportion of null hypotheses amongst all tests, and
 
 \subsection{Implementation}
 
-largeQvalue is written mainly in the D programming language \citep{dlang}. D is a compiled language which promises runtime speeds of the same order as C or C++ while guaranteeing memory safety, and also allows easy integration with code written in C. Leveraging this, parts of the program are written in C; in particular we use the GNU Software Library (\url{http://www.gnu.org/software/gsl/}) functions for fitting cubic splines, and sampling from the binomial distribution. The program is released as standalone binaries for use on the linux and Mac OSX systems, as well as source code which can be downloaded from a github repository (\url{https://github.com/abrown25/qvalue}) and be compiled on the Windows platform. This source code is released under the GNU General Public Licence v3 (\url{http://www.gnu.org/copyleft/gpl.html}). The program is called from the command line with options set using parameter flags. A description of all the available options can be found by running \texttt{./largeQvalue --help}.
+largeQvalue is written mainly in the D programming language \citep{dlang}. D is a compiled language which promises runtime speeds of the same order as C or C++ while guaranteeing memory safety, and also allows easy integration with code written in C. Leveraging this, parts of the program are written in C; in particular we use the GNU Software Library (\url{http://www.gnu.org/software/gsl/}) functions for sampling from the binomial distribution, and code from the R project \citep{R} for fitting smoothing splines. The program is released as standalone binaries for use on the linux and Mac OSX systems, as well as source code which can be downloaded from a github repository (\url{https://github.com/abrown25/qvalue}) and be compiled on the Windows platform. This source code is released under the GNU General Public Licence v3 (\url{http://www.gnu.org/copyleft/gpl.html}). The program is called from the command line with options set using parameter flags. A description of all the available options can be found by running \texttt{largeQvalue --help}.
 
 \subsection{Input and output file formats and commands}
 
-The input format for this program is a whitespace delimited (i.e. either tab or space separated fields) text file where the p values to be adjusted for multiple testing lie within one column. Consecutive runs of whitespace are collapsed to one whitespace character. The file can either be specified using the \texttt{--input} flag (i.e. \texttt{--input PValueFile}) or if not present, then following UNIX convention the filename is taken as the last argument on the command line. The column containing the p values can be specified with the \texttt{--col} flag; by default it is assumed to be the first column. If the \texttt{--header} flag is not present, then it is assumed the file does not have a header line. Any data that cannot be converted to numerical form will be treated as missing (the corresponding q value estimate will be written as NA). If any numerical values lie outside the interval [0, 1], then the program will terminate with the message \texttt{Some p values are outside [0, 1] interval}.
+The input format for this program is a whitespace delimited (i.e. either tab or space separated fields) text file where the p values to be adjusted for multiple testing lie within one column. Consecutive runs of whitespace are collapsed to one whitespace character. The file can either be specified using the \texttt{--input} flag (i.e. \texttt{--input PValueFile}) or if not present, then following UNIX convention the filename is taken as the last argument on the command line after all arguments have been passed. If this is not present then input is taken from the stdin. The column containing the p values can be specified with the \texttt{--col} flag; by default it is assumed to be the first column. If the \texttt{--header} flag is not present, then it is assumed the file does not have a header line. Any data that cannot be converted to numerical form will be treated as missing (the corresponding q value estimate will be written as NA). If any numerical values lie outside the interval [0, 1], then the program will terminate with the message \texttt{Some p values are outside [0, 1] interval}.
 
 The standard output file is the input file with an additional column on the end which specifies the q value \citep{storeydirect} corresponding to the p value in that row. If a filename for the output is not specified using the \texttt{--out} flag, then output is written to stdout.
 
@@ -101,11 +101,9 @@ The methodology to estimate $\pi_0$ using cubic splines was described in \citet{
 
 This option takes a sequence of $\lambda$ values, specified by \texttt{--lambda START,STOP,STEP} (default value is 0 to 0.9 in steps of 0.05). Estimates of $\hat{\pi}_0(\lambda)$ are calculated at every value of $\lambda$ and a cubic spline is fitted to these points to estimate the asymptote as $\lambda\rightarrow1$. The estimate of $\pi_0$ used is the value of this cubic spline at the maximum value of $\lambda$.
 
-The amount of smoothing supplied by the spline can be adjusted using the \texttt{--coef} flag (default 5, must be greater than 3). If the \texttt{--log} flag is specified then the spline is fitted to the $\text{log(}\hat{\pi}_0(\lambda))$ values instead of $\hat{\pi}_0(\lambda)$.
+The amount of smoothing supplied by the spline can be adjusted using the \texttt{--df} flag (default 3, must be between 1 and the length of the $\lambda$ sequence). If the \texttt{--log} flag is specified then the spline is fitted to the $\text{log(}\hat{\pi}_0(\lambda))$ values instead of $\hat{\pi}_0(\lambda)$.
 
 Figure~\ref{fig:spline_param} shows the output of the parameter file processed by R when this methodology is used. The dots show the estimates of $\pi_0$ at various values of $\lambda$, the black line is a cubic spline fitted to these points which is used to approximate the function $\pi_0(\lambda)$. The estimate $\hat{\pi}_0$ used to estimate q values is shown in red line.
-
-largeQvalue uses the spline fitting algorithm implemented in the gsl, which differs slightly to the implementation used by the qvalue package. Exact replication of qvalue results can be produced by running the program twice. First, run the code with the \texttt{--param} flag specified. Paste the parameter output into R. A line in the output \texttt{Estimate of pi0 from qvalue package is:} specifies the qvalue estimate of $\pi_0$. The analysis can then be run again, specifying this value with the \texttt{--pi0} flag.
 
 \subsection{Estimation of $\pi_0$ from bootstrap samples}
 \label{sec:boot}
@@ -127,7 +125,7 @@ The flags \texttt{--help} and \texttt{--version} will bring up the help page and
 
 The flag \texttt{--param} allows the user to specify an output file to write estimates of parameters. When only a single value of $\lambda$ is specified, this file only contains the point estimate of $\pi_0$. When $\lambda$ is specified as a sequence, these parameters include the estimate of $\pi_0$ used to calculate q values and the estimates $\hat{\pi}_0(\lambda)$ for every value in this sequence. If the cubic spline method is employed, then smoothed cubic splines values are reported at every value of $\lambda$. For the bootstrap method the file contains all bootstrap estimates $\hat{\pi}^{B_j}_0(\lambda)$ and estimates of the mean square error. Examples of these files can be found in Supplementary Materials~\ref{sec:suppspline} and \ref{sec:suppboot}. These files can be pasted into R to produce diagnostic plots, examples of which can be seen in Figures~\ref{fig:spline_param} and \ref{fig:boot_param}.
 
-The \texttt{--pi0} flag allows the estimate of $\pi_0$ to be directly specified. This can be useful to exactly recreate q values produced using the cubic spline routine from the q value package.
+The \texttt{--pi0} flag allows the estimate of $\pi_0$ to be directly specified.
 
 The \texttt{--robust} flag produces q values which are more conservative for very small values of p. Instead of q values defined by Equation~\ref{eq:qvalue}, we use the formula:
 
@@ -216,23 +214,23 @@ write(qvalue(Pvalues, pi0.method == "bootstrap")$qvalues,
 
 
  \begin{tabular}{llp{9cm}}
-    \texttt{--help}    & : &Print help and quit \\
-    \texttt{--version} & : &Print version and quit \\
-    \texttt{--header}  & : &Input has header line (default = FALSE) \\
-    \texttt{--boot}    & : &Apply bootstrap method to find $\pi_0$ (default = FALSE) \\
-    \texttt{--seed}    & : &Set seed for generating bootstrap samples (default = 0, equivalent to gsl default) \\
-    \texttt{--coef}    & : &Set the number of coefficients used to fit cubic spline (default = 5, must be greater than 3) \\
-    \texttt{--log}     & : &Smoothing spline applied to log $\pi_0$ values (default = FALSE) \\
-    \texttt{--robust}  & : &More robust values for small p values (default = FALSE) \\
-    \texttt{--pi0}     & : &Use value of $\pi_0$ given (useful for recreating qvalue package results) \\
-    \texttt{--lambda}  & : &Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05) \\
-    \texttt{--param}   & : &Print out parameter list to given file \\
-    \texttt{--out}     & : &File to write results to (default = stdout) \\
-    \texttt{--input}   & : &File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used) \\
-    \texttt{--issorted}& : &File has already been sorted with no missing values (default = FALSE) \\
-    \texttt{--col}     & : &Column with p values (default = 1) \\
+    \texttt{--help}    & : &Print help and quit. \\
+    \texttt{--version} & : &Print version and quit. \\
+    \texttt{--input}   & : &File to take results from (must be specified, if not explicitly, the last parameter after all options have been parsed is used). If not present, is taken to be the stdin. \\
+    \texttt{--out}     & : &File to write results to (default = stdout). \\
+    \texttt{--param}   & : &Print out parameter list to given file. \\
+    \texttt{--header}  & : &Input has header line (default = FALSE). \\
+    \texttt{--col}     & : &Column with p values (default = 1). \\
+    \texttt{--issorted}& : &File has already been sorted with no missing values (default = FALSE). \\
+    \texttt{--pi0}     & : &Use value of $\pi_0$ given. \\
+    \texttt{--lambda}  & : &Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05). \\
+    \texttt{--robust}  & : &More robust values for small p values (default = FALSE). \\
+    \texttt{--df}      & : &Number of degrees of freedom used by the spline to estimate pi0 (default = 3). \\ 
+    \texttt{--log}     & : &Smoothing spline applied to log $\pi_0$ values (default = FALSE). \\
+    \texttt{--boot}    & : &Apply bootstrap method to find $\pi_0$ (default = FALSE). \\
+    \texttt{--seed}    & : &Set seed for generating bootstrap samples (default = 0, equivalent to gsl default). \\
 \end{tabular}
- \end{framed}
+\end{framed}
 
 \subsection{Binary executables}
 
@@ -246,9 +244,7 @@ The binary for 64bit linux can be found here:
 
 \subsection{Building from source}
 
-To compile an executable binary from source (for example if you are using Windows), it is necessary to have both a D compiler (we have used the ldc compiler as it produces faster programs) and the gsl library installed on your system. Binaries for the ldc compiler can be downloaded from here: \url{https://github.com/ldc-developers/ldc/releases} and a link to the gsl software library found here: \url{http://www.gnu.org/software/gsl/}. Once both are installed you can clone the github account by running \texttt{git clone https://github.com/abrown25/qvalue.git}. Then change to the qvalue directory and run \texttt{make}. If you see an error stating \texttt{/usr/lib/libgsl.a: No such file or directory} this means the gsl is installed in a different folder on your system. Edit the first line of the makefile to reflect where the library can be found, then rerun the \texttt{make} command. Once this is done, if installation has worked then running \texttt{./largeQvalue} should bring up the help information. If there are any issues with this procedure, please contact \href{mailto:andrew.brown@unige.ch}{andrew.brown@unige.ch}.
-
-It is possible that you wish to compile with the reference D compiler DMD (this may especially be true if you are working on a Windows system). This can be downloaded from \url{http://dlang.org/download.html}. Then, the only difference with the previous installation is you must run \texttt{make dmd} instead of \texttt{make}.
+To compile an executable binary from source (for example if you are using Windows), it is necessary to have both a D compiler (we have used the gdc compiler as it produces faster programs) and the gsl library installed on your system. Binaries for the gdc compiler can be downloaded from here: \url{http://gdcproject.org/downloads/} and a link to the gsl software library found here: \url{http://www.gnu.org/software/gsl/}. Once both are installed you can clone the github account by running \texttt{git clone https://github.com/abrown25/qvalue.git}. Then change to the qvalue directory and run \texttt{make}. Once this is done, if installation has worked then running \texttt{./largeQvalue} should bring up the help information. A simple test that the program is working correctly can be run by typing \texttt{make test}. If there are any issues with this procedure, please contact \href{mailto:andrew.brown@unige.ch}{andrew.brown@unige.ch}.
 
 \section{Results}
 
@@ -364,7 +360,7 @@ I would like to thank Leo Parts and Ana Vi\~{n}uela for their comments and sugge
 \label{sec:suppspline}
 This is an example of the standard output using the \texttt{--param} flag and the standard, spline estimation of $\pi_0$. It has been edited to solely to ensure lines fit comfortably on the page and to replace unicode characters.
 
-\lstinputlisting{simple_param}
+\lstinputlisting{sample_param}
 
 \subsection{Parameter output file using \texttt{--boot} flag}
 \label{sec:suppboot}
