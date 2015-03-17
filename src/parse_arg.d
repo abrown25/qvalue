@@ -12,15 +12,15 @@ static immutable string helpString = "Usage: largeQvalue [options]
 Options:
     --help     : Print help and quit.
     --version  : Print version and quit.
-    --input    : File to take results from. Can also be specified by the last argument on the command-line after all others have been parsed. If not present, is taken to be the stdin.
+    --input    : File to containing p values to analysis. This can also be specified by the last argument on the command-line after all others have been parsed. If neither are present, it is taken from the stdin.
     --out      : File to write results to (default = stdout).
-    --param    : Print out parameter list to given file.
+    --param    : Print out parameter list to specified file.
     --header   : Input has header line (default = FALSE).
     --col      : Column with p values (default = 1).
-    --sep      : Separator to use to delimit the column with q values. Specified as either space or tab (which can be shortened to s or t), (default = tab).
+    --sep      : Separator to use to separate the column with q values. Specified as either space or tab (which can be shortened to s or t), (default = tab).
     --issorted : File has already been sorted with no missing values (default = FALSE).
-    --pi0      : Use value of pi0 given.
-    --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05).
+    --pi0      : Use given value of pi0 given.
+    --lambda   : Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) (default = 0,0.9,0.05).
     --robust   : More robust values for small p values (default = FALSE).
     --df       : Number of degrees of freedom used by the spline when estimating pi0 (default = 3).
     --log      : Smoothing spline applied to log pi0 values (default = FALSE).
