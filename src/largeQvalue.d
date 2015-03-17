@@ -2,7 +2,7 @@ import std.algorithm : assumeSorted, makeIndex, min, reduce, reverse;
 import std.array : array, join;
 import std.math : exp, fabs, fmin, isNaN, log, pow;
 import std.range : chunks, indexed, iota, zip;
-import std.stdio : File, stdin, stdout, tmpfile;
+import std.stdio : File, stderr, stdin, stdout, tmpfile;
 import std.string : chomp;
 import std.utf;
 import parse_arg;
@@ -144,7 +144,7 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
     }
     catch (InputException e)
     {
-        writeln(e.msg);
+        stderr.writeln(e.msg);
         exit(0);
     }
 
@@ -230,7 +230,7 @@ void main(in string[] args)
     }
     catch (Exception e)
     {
-        writeln(e.msg);
+        stderr.writeln(e.msg);
         exit(0);
     }
 
@@ -259,7 +259,7 @@ void main(in string[] args)
         }
         catch (InputException e)
         {
-            writeln(e.msg);
+            stderr.writeln(e.msg);
             exit(0);
         }
     }
@@ -273,7 +273,7 @@ void main(in string[] args)
     }
     catch (InputException e)
     {
-        writeln(e.msg);
+        stderr.writeln(e.msg);
         exit(0);
     }
 
@@ -309,6 +309,8 @@ void main(in string[] args)
     foreach (ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
         qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
 
+    string sep = opts.sep;
+
     if (tmp)
     {
         tmpFile.seek(0);
@@ -321,15 +323,15 @@ void main(in string[] args)
                 pVal = to!double(splitLine[opts.col - 1]);
                 if (!pVal.isNaN)
                 {
-                    outFile.writeln(line, "\t", qVal[i]);
+                    outFile.writeln(line, sep, qVal[i]);
                     i++;
                 }
                 else
-                    outFile.writeln(line, "\tNaN");
+		  outFile.writeln(line, sep, "NaN");
             }
             catch (ConvException e)
             {
-                outFile.writeln(line, "\tNA");
+	      outFile.writeln(line, sep, "NA");
             }
         }
     }
@@ -347,15 +349,15 @@ void main(in string[] args)
                 pVal = to!double(splitLine[opts.col - 1]);
                 if (!isNaN(pVal))
                 {
-                    outFile.writeln(line, "\t", qVal[i]);
+                    outFile.writeln(line, sep, qVal[i]);
                     i++;
                 }
                 else
-                    outFile.writeln(line, "\tNaN");
+		  outFile.writeln(line, sep, "NaN");
             }
             catch (ConvException e)
             {
-                outFile.writeln(line, "\tNA");
+	      outFile.writeln(line, sep, "NA");
             }
         }
     }

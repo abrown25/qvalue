@@ -6,7 +6,7 @@ import std.conv : to, ConvException;
 import std.exception : enforce;
 import std.getopt;
 import std.math : isNaN;
-import std.stdio : writeln;
+import std.stdio : stderr, writeln;
 
 static immutable string helpString = "Usage: largeQvalue [options]
 Options:
@@ -17,6 +17,7 @@ Options:
     --param    : Print out parameter list to given file
     --header   : Input has header line (default = FALSE)
     --col      : Column with p values (default = 1)
+    --sep      : Separator to use to delimit the column with q values. Specified as either space or tab (which can be shortened to s or t), (default = tab).
     --issorted : File has already been sorted with no missing values (default = FALSE)
     --pi0      : Use value of pi0 given
     --lambda   : Either a fixed number or a sequence given 0,0.9,0.05 (default = 0,0.9,0.05)
@@ -50,6 +51,7 @@ class Opts
     bool issorted = false;
     double pi0;
     string lambda = "0,0.9,0.05";
+    string sep = "t";
     double lambdaStart;
     double lambdaEnd;
     double lambdaStep;
@@ -67,22 +69,13 @@ class Opts
         {
             getopt(args, "help", &help, "version", &version_, "header",
                 &header, "boot", &boot, "log", &logSmooth, "robust", &robust,
-                "issorted", &issorted, "pi0", &pi0, "lambda", &lambda, "df",
+		   "issorted", &issorted, "pi0", &pi0, "lambda", &lambda, "sep", &sep, "df",
                 &df, "col", &col, "seed", &seed, "input", &input, "param",
                 &param, "out", &outF);
         }
         catch (Exception e)
         {
-            writeln("Failed to run. ", e.msg);
-            exit(0);
-        }
-
-        try
-        {
-        }
-        catch (InputException e)
-        {
-            writeln(e.msg);
+            stderr.writeln("Failed to run. ", e.msg);
             exit(0);
         }
 
@@ -111,15 +104,24 @@ class Opts
         }
         catch (ConvException e)
         {
-            writeln("Non-numeric parameters handed to lambda");
+            stderr.writeln("Non-numeric parameters handed to lambda");
             exit(0);
         }
         catch (InputException e)
         {
-            writeln(e.msg);
+            stderr.writeln(e.msg);
             exit(0);
         }
-
+	
+	if (sep=="s" || sep =="space")
+	  sep = " ";
+	else
+	  {
+	    if (sep!="t" && sep!="tab")
+	      stderr.writeln("--sep misspecified, defaulting to tab.");
+	    sep = "\t";
+	  }
+	
         try
         {
             enforce(pi0.isNaN || (pi0 > 0 && pi0 <= 1),
@@ -127,7 +129,7 @@ class Opts
         }
         catch (InputException e)
         {
-            writeln(e.msg);
+            stderr.writeln(e.msg);
             exit(0);
         }
 
