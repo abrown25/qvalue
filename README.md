@@ -10,13 +10,14 @@ The binary for 64bit linux can be found here:
 
 ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue.tar.gz
 
-The binary for Mac OSX can be found here:
-
-ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue_mac.tar.gz
-
-### Example command:
-
+### Example commands:
+```
+largeQvalue < QTLresults.txt
+```
+The file QTLresults.txt contains the p values for association in the first column, the results are written to stdout with q values controlling for multiple testing, calculated using default settings, in a new final column.
+```
 largeQvalue --header --col 4 --out output --param parameter_file --lambda 0,0.9,0.05 --robust QTLresults.txt
+```
 
 The p values can be found in the 4th column of QTLresults.txt, write the results to output and the estimated parameter values to parameter_file. Use values of lambda from 0 to 0.9 in steps of 0.05 to estimate proportion of null hypotheses (standard settings in qvalue) and produce estimates of q values robust for small p values.
 
