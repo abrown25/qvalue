@@ -1,7 +1,7 @@
-import std.algorithm : assumeSorted, makeIndex, min, reduce, reverse;
+import std.algorithm : makeIndex, min, reduce, reverse;
 import std.array : array, join;
 import std.math : exp, fabs, fmin, isNaN, log, pow;
-import std.range : chunks, indexed, iota, zip;
+import std.range : assumeSorted, chunks, indexed, iota, zip;
 import std.stdio : File, stderr, stdin, stdout, tmpfile;
 import std.string : chomp;
 import std.utf;

@@ -6,8 +6,8 @@ largeQvalue : $(SOURCES_D) src/bootstrap.c src/libspline.a
 	rm -f src/bootstrap.o largeQvalue.o
 	strip largeQvalue
 
-src/libspline.a : src/spline_src/bsplvd.f src/spline_src/bvalue.f src/spline_src/bvalus.f src/spline_src/dpbfa.f src/spline_src/dpbsl.f src/spline_src/interv.c src/spline_src/modreg.h src/spline_src/sgram.f src/spline_src/sinerp.f src/spline_src/spline_fit.c src/spline_src/sslvrg.f src/spline_src/stxwx.f
-	gcc -I/usr/include/R -c src/spline_src/bsplvd.f src/spline_src/bvalue.f src/spline_src/bvalus.f src/spline_src/dpbfa.f src/spline_src/dpbsl.f src/spline_src/interv.c src/spline_src/sgram.f src/spline_src/sinerp.f src/spline_src/spline_fit.c src/spline_src/sslvrg.f src/spline_src/stxwx.f
+src/libspline.a : src/spline_src/* header/*
+	gcc -Iheader/ -c src/spline_src/bsplvd.f src/spline_src/bvalue.f src/spline_src/bvalus.f src/spline_src/dpbfa.f src/spline_src/dpbsl.f src/spline_src/interv.c src/spline_src/sgram.f src/spline_src/sinerp.f src/spline_src/spline_fit.c src/spline_src/sslvrg.f src/spline_src/stxwx.f
 	ar rcs src/libspline.a bsplvd.o bvalue.o bvalus.o dpbfa.o dpbsl.o interv.o sgram.o sinerp.o spline_fit.o sslvrg.o stxwx.o
 	rm -f bsplvd.o bvalue.o bvalus.o dpbfa.o dpbsl.o interv.o sgram.o sinerp.o spline_fit.o sslvrg.o stxwx.o
 

@@ -23,9 +23,11 @@
  * Martin Maechler.
  */
 
-#include <R_ext/Applic.h>
-#include <R_ext/Boolean.h>
-#include <R_ext/Utils.h>
+#include <Applic.h>
+#include <Boolean.h>
+#include <Utils.h>
+
+typedef enum { false, true } bool;
 
 /* This is called from stats/src/bvalue.f, and packages gam and mda */
 int F77_SUB(interv)(double *xt, int *n, double *x,
