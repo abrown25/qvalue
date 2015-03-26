@@ -28,31 +28,48 @@ DESCRIPTION
 
 OPTIONS
        --help    Print help and quit.
+
        --version Print version and quit.
+
        --input CHAR
                  File  containing  p  values  to analyse. This can also be specified by the last argument on the command-line after all others have been parsed. If neither are present, it is taken from the
                  stdin [stdin].
+
        --out CHAR
                  File to write results to [stdout].
+
        --param CHAR
                  Print out parameter list to specified file.
+
        --header  Input has header line [FALSE].
+
        --col INT Column with p values [1].
+
        --sep CHAR
                  Separator to use to separate the column with q values. Specified as either space or tab (which can be shortened to s or t) [tab].
+
        --issorted
                  File has already been sorted with no missing values [FALSE].
+
        --pi0 DOUBLE
                  Use given value of pi0.
+
        --lambda DOUBLE(,DOUBLE,DOUBLE)
                  Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) [0,0.9,0.05].
+
        --robust  More robust values for small p values [FALSE].
+
        --df DOUBLE
                  Number of degrees of freedom used by the spline when estimating pi0 [3].
+
        --log     Smoothing spline applied to log pi0 values [FALSE].
+
        --boot    Apply bootstrap method to find pi0 [FALSE].
+
        --seed DOUBLE
                  Set seed for generating bootstrap samples [0].
+
+
 
 largeQvalue-1.0.1                                                                              27th March 2015                                                                                 largeQvalue(1)
 ";
