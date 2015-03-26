@@ -1,0 +1,81 @@
+.TH largeQvalue 1 "27th March 2015" "largeQvalue-1.0.1" "Statistical genetics"
+.SH NAME
+.PP
+largeQvalue: A program for calculating FDR estimates with large datasets.
+.\"The GPL v3 License
+.\"
+.\"   Copyright (C) 2014 Genome Research Ltd.
+.\"
+.\"   Author: Andrew Brown <ab25@sanger.ac.uk>
+.\"
+.\"   This program is free software: you can redistribute it and/or modify
+.\"   it under the terms of the GNU General Public License as published by
+.\"   the Free Software Foundation, either version 3 of the License, or
+.\"   (at your option) any later version.
+.\"
+.\"   This program is distributed in the hope that it will be useful,
+.\"   but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\"   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\"   GNU General Public License for more details.
+.\"
+.\"   You should have received a copy of the GNU General Public License
+.\"   along with this program. If not, see <http://www.gnu.org/licenses/>.
+.\"
+.SH SYNOPSIS
+.PP
+.B largeQvalue
+.RB [options]
+
+.SH DESCRIPTION
+.PP
+This is an implementation of the qvalue package (Alan Dabney, John D. Storey and with assistance from Gregory R. Warnes (). qvalue: Q-value estimation for false discovery rate control. R package version 1.34.0.) which is designed for use with large datasets where memory or computation time may be an issue with R. It has been used to analyse full cis scans of gene expression data, with hundreds of millions of P values. A description of the algorithms and instructions for usage can be found in the accompanying paper: http://biorxiv.org/content/early/2014/10/06/010074.
+
+.SH OPTIONS
+.TP 10
+.B --help
+Print help and quit.
+.TP
+.B --version
+Print version and quit.
+.TP
+.BI "--input " CHAR
+File containing p values to analyse. This can also be specified by the last argument on the command-line after all others have been parsed. If neither are present, it is taken from the stdin [stdin].
+.TP
+.BI "--out " CHAR
+File to write results to [stdout].
+.TP
+.BI "--param " CHAR
+Print out parameter list to specified file.
+.TP
+.B --header 
+Input has header line [FALSE].
+.TP
+.BI "--col " INT
+Column with p values [1].
+.TP
+.BI "--sep " CHAR
+Separator to use to separate the column with q values. Specified as either space or tab (which can be shortened to s or t) [tab].
+.TP
+.B --issorted
+File has already been sorted with no missing values [FALSE].
+.TP
+.BI "--pi0 " DOUBLE
+Use given value of pi0.
+.TP
+.BI "--lambda " DOUBLE(,DOUBLE,DOUBLE)
+Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) [0,0.9,0.05].
+.TP
+.B --robust
+More robust values for small p values [FALSE].
+.TP
+.BI "--df " DOUBLE
+Number of degrees of freedom used by the spline when estimating pi0 [3].
+.TP
+.B --log
+Smoothing spline applied to log pi0 values [FALSE].
+.TP
+.B --boot
+Apply bootstrap method to find pi0 [FALSE].
+.TP
+.BI "--seed " DOUBLE
+Set seed for generating bootstrap samples [0].
