@@ -2,7 +2,7 @@ import std.algorithm : makeIndex, min, reduce, reverse;
 import std.array : array, join;
 import std.math : exp, fabs, fmin, isNaN, log, pow;
 import std.range : assumeSorted, chunks, indexed, iota, zip;
-import std.stdio : File, stderr, stdin, stdout, tmpfile;
+import std.stdio : File, stderr, stdin, stdout, tmpfile, write;
 import std.string : chomp;
 import std.utf;
 import parse_arg;
@@ -11,6 +11,11 @@ extern (C)
 {
     void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize,
         size_t seed);
+}
+
+pure nothrow extern (C)
+{
+  double gsl_cdf_beta_Pinv(double x, double a, double b);
 }
 
 extern (C)
@@ -311,9 +316,36 @@ void main(in string[] args)
 
     foreach (ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
         qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
+    import std.range : retro;
+    import std.algorithm : countUntil;
+    double nomThreshold;
 
+    if (opts.fast)
+      {
+	size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < 0.05);
+	if (firstThreshold==-1)
+	  nomThreshold = 2;
+	else if (firstThreshold==0)
+	  nomThreshold = pVals[orderIndex[0]];
+	else
+	  nomThreshold = pVals[orderIndex[firstThreshold - 1]];
+ 	writeln(nomThreshold);
+      }
+    
     string sep = opts.sep;
-
+    string noPvalue;
+    string nanPvalue;
+    if (opts.fast)
+      {
+	noPvalue = sep ~ "NA" ~ sep ~ "NA";
+	nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
+      }
+    else
+      {
+	noPvalue = sep ~ "NA";
+	nanPvalue = sep ~ "NaN";
+      }
+	
     if (tmp)
     {
         tmpFile.seek(0);
@@ -326,15 +358,22 @@ void main(in string[] args)
                 pVal = to!double(splitLine[opts.col - 1]);
                 if (!pVal.isNaN)
                 {
-                    outFile.writeln(line, sep, qVal[i]);
+                    outFile.write(line, sep, qVal[i]);
                     i++;
+		    if (opts.fast)
+		      {
+			if (nomThreshold!=2)
+			  write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
+			else
+			  write(sep, "NA");
+		      }
                 }
                 else
-                    outFile.writeln(line, sep, "NaN");
+                    outFile.writeln(line, nanPvalue);
             }
             catch (ConvException e)
             {
-                outFile.writeln(line, sep, "NA");
+                outFile.writeln(line, noPvalue);
             }
         }
     }
@@ -350,17 +389,24 @@ void main(in string[] args)
             try
             {
                 pVal = to!double(splitLine[opts.col - 1]);
-                if (!isNaN(pVal))
+                if (!pVal.isNaN)
                 {
-                    outFile.writeln(line, sep, qVal[i]);
+                    outFile.write(line, sep, qVal[i]);
                     i++;
+		    if (opts.fast)
+		      {
+			if (nomThreshold!=2)
+			  write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
+			else
+			  write(sep, "NA");
+		      }
                 }
                 else
-                    outFile.writeln(line, sep, "NaN");
+                    outFile.writeln(line, nanPvalue);
             }
             catch (ConvException e)
             {
-                outFile.writeln(line, sep, "NA");
+                outFile.writeln(line, noPvalue);
             }
         }
     }

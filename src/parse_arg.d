@@ -69,6 +69,9 @@ OPTIONS
        --seed DOUBLE
                  Set seed for generating bootstrap samples [0].
 
+       --fast
+                 Report nominal P value threshold from fastQTL results file [FALSE].
+
 
 
 largeQvalue-1.0.1                                                                              27th March 2015                                                                                 largeQvalue(1)
@@ -107,6 +110,7 @@ class Opts
     string input = "";
     string param = "";
     string outF = "";
+    bool fast = true;
 
     this(string[] args)
     {
@@ -117,7 +121,7 @@ class Opts
                 &header, "boot", &boot, "log", &logSmooth, "robust", &robust,
                 "issorted", &issorted, "pi0", &pi0, "lambda", &lambda, "sep",
                 &sep, "df", &df, "col", &col, "seed", &seed, "input",
-                &input, "param", &param, "out", &outF);
+		   &input, "param", &param, "out", &outF, "fast", &fast);
         }
         catch (Exception e)
         {
