@@ -110,7 +110,7 @@ class Opts
     string input = "";
     string param = "";
     string outF = "";
-    bool fast = true;
+    bool fast = false;
 
     this(string[] args)
     {

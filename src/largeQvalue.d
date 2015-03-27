@@ -363,10 +363,11 @@ void main(in string[] args)
 		    if (opts.fast)
 		      {
 			if (nomThreshold!=2)
-			  write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
+			  outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
 			else
-			  write(sep, "NA");
+			  outFile.write(sep, "NA");
 		      }
+		    outFile.writeln();
                 }
                 else
                     outFile.writeln(line, nanPvalue);
@@ -396,10 +397,11 @@ void main(in string[] args)
 		    if (opts.fast)
 		      {
 			if (nomThreshold!=2)
-			  write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
+			  outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
 			else
-			  write(sep, "NA");
+			  outFile.write(sep, "NA");
 		      }
+		    outFile.writeln();
                 }
                 else
                     outFile.writeln(line, nanPvalue);
