@@ -316,10 +316,9 @@ void main(in string[] args)
 
     foreach (ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
         qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
-    import std.range : retro;
-    import std.algorithm : countUntil;
-    double nomThreshold;
 
+    double nomThreshold;
+    import std.algorithm : countUntil;
     if (opts.fast)
       {
 	size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < 0.05);
@@ -329,7 +328,6 @@ void main(in string[] args)
 	  nomThreshold = pVals[orderIndex[0]];
 	else
 	  nomThreshold = pVals[orderIndex[firstThreshold - 1]];
- 	writeln(nomThreshold);
       }
     
     string sep = opts.sep;
