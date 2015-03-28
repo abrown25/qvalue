@@ -163,13 +163,13 @@ class Opts
             exit(0);
         }
 
-        if (fast!=2)
+        if (fast != 2)
         {
-  	    if (fast < 0 || fast > 1)
-	    {
- 	        stderr.writeln("Requested nominal P value threshold is not in [0, 1] interval.");
-	        exit(0);
-	    }
+            if (fast < 0 || fast > 1)
+            {
+                stderr.writeln("Requested nominal P value threshold is not in [0, 1] interval.");
+                exit(0);
+            }
             col = 10;
             sep = "s";
         }
