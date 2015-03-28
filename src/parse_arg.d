@@ -69,8 +69,8 @@ OPTIONS
        --seed DOUBLE
                  Set seed for generating bootstrap samples [0].
 
-       --fast
-                 Report nominal P value threshold from fastQTL results file.
+       --fast DOUBLE
+                 Report nominal P value threshold for each gene corresponding to given FDR threshold when input is a fastQTL results file.
 
 
 
