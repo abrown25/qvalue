@@ -68,5 +68,9 @@ The p values can be found in the 4th column of QTLresults.txt, write the results
     --boot    Apply bootstrap method to find pi0 [FALSE].
 
     --seed DOUBLE
-             Set seed for generating bootstrap samples [0].
+              Set seed for generating bootstrap samples [0].
+
+    --fast DOUBLE
+              Report nominal P value threshold for each gene corresponding to given FDR threshold when input is a fastQTL results file.
+
 ```
