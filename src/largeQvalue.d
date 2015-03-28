@@ -317,6 +317,7 @@ void main(in string[] args)
 
     double nomThreshold;
     import std.algorithm : countUntil;
+    double nomThreshold;
 
     if (opts.fast)
     {
