@@ -316,7 +316,7 @@ void main(in string[] args)
 
     foreach (ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
         qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
-    import std.range : retro;
+
     import std.algorithm : countUntil;
     double nomThreshold;
 
@@ -329,7 +329,6 @@ void main(in string[] args)
 	  nomThreshold = pVals[orderIndex[0]];
 	else
 	  nomThreshold = pVals[orderIndex[firstThreshold - 1]];
- 	writeln(nomThreshold);
       }
     
     string sep = opts.sep;
@@ -363,10 +362,11 @@ void main(in string[] args)
 		    if (opts.fast)
 		      {
 			if (nomThreshold!=2)
-			  write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
+			  outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
 			else
-			  write(sep, "NA");
+			  outFile.write(sep, "NA");
 		      }
+		    outFile.writeln();
                 }
                 else
                     outFile.writeln(line, nanPvalue);
@@ -396,10 +396,11 @@ void main(in string[] args)
 		    if (opts.fast)
 		      {
 			if (nomThreshold!=2)
-			  write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
+			  outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
 			else
-			  write(sep, "NA");
+			  outFile.write(sep, "NA");
 		      }
+		    outFile.writeln();
                 }
                 else
                     outFile.writeln(line, nanPvalue);
