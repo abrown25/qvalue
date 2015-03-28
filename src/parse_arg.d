@@ -70,7 +70,7 @@ OPTIONS
                  Set seed for generating bootstrap samples [0].
 
        --fast
-                 Report nominal P value threshold from fastQTL results file [FALSE].
+                 Report nominal P value threshold from fastQTL results file.
 
 
 
@@ -110,7 +110,7 @@ class Opts
     string input = "";
     string param = "";
     string outF = "";
-    bool fast = false;
+    double fast = 2.0;
 
     this(string[] args)
     {
@@ -163,8 +163,13 @@ class Opts
             exit(0);
         }
 
-        if (fast)
+        if (fast!=2)
         {
+  	    if (fast < 0 || fast > 1)
+	    {
+ 	        stderr.writeln("Requested nominal P value threshold is not in [0, 1] interval.");
+	        exit(0);
+	    }
             col = 10;
             sep = "s";
         }

@@ -13,7 +13,7 @@ extern (C)
         size_t seed);
 }
 
-pure nothrow extern (C)
+extern (C)
 {
     double gsl_cdf_beta_Pinv(double x, double a, double b);
 }
@@ -315,12 +315,14 @@ void main(in string[] args)
     foreach (ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
         qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
 
+    bool fastQTLData = opts.fast == 2.0 ? false : true;
     double nomThreshold;
-    import std.algorithm : countUntil;
-
-    if (opts.fast)
+    
+    if (fastQTLData)
     {
-        size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < 0.05);
+        import std.algorithm : countUntil;
+
+        size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < opts.fast);
         if (firstThreshold == -1)
             nomThreshold = 2;
         else if (firstThreshold == 0)
@@ -332,7 +334,7 @@ void main(in string[] args)
     string sep = opts.sep;
     string noPvalue;
     string nanPvalue;
-    if (opts.fast)
+    if (fastQTLData)
     {
         noPvalue = sep ~ "NA" ~ sep ~ "NA";
         nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
@@ -357,7 +359,7 @@ void main(in string[] args)
                 {
                     outFile.write(line, sep, qVal[i]);
                     i++;
-                    if (opts.fast)
+                    if (fastQTLData)
                     {
                         if (nomThreshold != 2)
                             outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold,
@@ -392,7 +394,7 @@ void main(in string[] args)
                 {
                     outFile.write(line, sep, qVal[i]);
                     i++;
-                    if (opts.fast)
+                    if (fastQTLData)
                     {
                         if (nomThreshold != 2)
                             outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold,
