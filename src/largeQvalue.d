@@ -15,7 +15,7 @@ extern (C)
 
 pure nothrow extern (C)
 {
-  double gsl_cdf_beta_Pinv(double x, double a, double b);
+    double gsl_cdf_beta_Pinv(double x, double a, double b);
 }
 
 extern (C)
@@ -79,8 +79,7 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
         paramFile.writeln("#λ values to calculate this were:         [", lambda.to!(string[]).join(", "), "]\n\n",
 			  "#with the corresponding π₀ values:        [", pi0.to!(string[]).join(", "), "]\n\n",
 			  "#and mean squared error estimates:        [", mse.to!(string[]).join(", "), "]\n");
-        paramFile.writeln(
-			  "###R code to produce diagnostic plots for bootstrap estimates of π₀:\n");
+        paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀:\n");
         paramFile.writeln("plot.pi0.data <- data.frame(x = rep(c(", lambda.to!(string[]).join(", "), "), 100),
                             y = c(", bootPi0.to!(string[]).join(", "), "))\n");
         paramFile.writeln("plot.data <- data.frame(x = c(", lambda.to!(string[]).join(", "), "),
@@ -192,9 +191,8 @@ pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double 
         {
             foreach (ref j; orderIndex[(i - dupcount + 1) .. (i + 1)])
                 if (robust)
-                    qVal[j] = pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[
-                        j
-                    ], len)));
+                    qVal[j] = pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[j],
+                        len)));
                 else
                     qVal[j] = pi0 * pVal[j] * len / (i + 1);
             dupcount = 0;
@@ -276,8 +274,8 @@ void main(in string[] args)
     {
         enforce(pVals.length > 0, new InputException("No p values read"));
         foreach (ref e; pVals)
-            enforce(e <= 1 && e >= 0, new InputException(
-                "Some p values are outside [0, 1] interval"));
+            enforce(e <= 1 && e >= 0,
+                new InputException("Some p values are outside [0, 1] interval"));
     }
     catch (InputException e)
     {
@@ -319,31 +317,32 @@ void main(in string[] args)
 
     double nomThreshold;
     import std.algorithm : countUntil;
+
     if (opts.fast)
-      {
-	size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < 0.05);
-	if (firstThreshold==-1)
-	  nomThreshold = 2;
-	else if (firstThreshold==0)
-	  nomThreshold = pVals[orderIndex[0]];
-	else
-	  nomThreshold = pVals[orderIndex[firstThreshold - 1]];
-      }
-    
+    {
+        size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < 0.05);
+        if (firstThreshold == -1)
+            nomThreshold = 2;
+        else if (firstThreshold == 0)
+            nomThreshold = pVals[orderIndex[0]];
+        else
+            nomThreshold = pVals[orderIndex[firstThreshold - 1]];
+    }
+
     string sep = opts.sep;
     string noPvalue;
     string nanPvalue;
     if (opts.fast)
-      {
-	noPvalue = sep ~ "NA" ~ sep ~ "NA";
-	nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
-      }
+    {
+        noPvalue = sep ~ "NA" ~ sep ~ "NA";
+        nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
+    }
     else
-      {
-	noPvalue = sep ~ "NA";
-	nanPvalue = sep ~ "NaN";
-      }
-	
+    {
+        noPvalue = sep ~ "NA";
+        nanPvalue = sep ~ "NaN";
+    }
+
     if (tmp)
     {
         tmpFile.seek(0);
@@ -358,14 +357,15 @@ void main(in string[] args)
                 {
                     outFile.write(line, sep, qVal[i]);
                     i++;
-		    if (opts.fast)
-		      {
-			if (nomThreshold!=2)
-			  outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
-			else
-			  outFile.write(sep, "NA");
-		      }
-		    outFile.writeln();
+                    if (opts.fast)
+                    {
+                        if (nomThreshold != 2)
+                            outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold,
+                                splitLine[2].to!double, splitLine[3].to!double));
+                        else
+                            outFile.write(sep, "NA");
+                    }
+                    outFile.writeln();
                 }
                 else
                     outFile.writeln(line, nanPvalue);
@@ -392,14 +392,15 @@ void main(in string[] args)
                 {
                     outFile.write(line, sep, qVal[i]);
                     i++;
-		    if (opts.fast)
-		      {
-			if (nomThreshold!=2)
-			  outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold, splitLine[2].to!double, splitLine[3].to!double));
-			else
-			  outFile.write(sep, "NA");
-		      }
-		    outFile.writeln();
+                    if (opts.fast)
+                    {
+                        if (nomThreshold != 2)
+                            outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold,
+                                splitLine[2].to!double, splitLine[3].to!double));
+                        else
+                            outFile.write(sep, "NA");
+                    }
+                    outFile.writeln();
                 }
                 else
                     outFile.writeln(line, nanPvalue);
