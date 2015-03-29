@@ -15,11 +15,6 @@ extern (C)
 
 extern (C)
 {
-    double gsl_cdf_beta_Pinv(double x, double a, double b);
-}
-
-extern (C)
-{
     void splineFit(double* xs, double* ys, double* knot, int n, double dofoff, double* results);
 }
 
@@ -317,7 +312,7 @@ void main(in string[] args)
 
     bool fastQTLData = opts.fast == 2.0 ? false : true;
     double nomThreshold;
-    
+
     if (fastQTLData)
     {
         import std.algorithm : countUntil;
@@ -345,6 +340,8 @@ void main(in string[] args)
         nanPvalue = sep ~ "NaN";
     }
 
+    import std.mathspecial : betaIncompleteInverse;
+
     if (tmp)
     {
         tmpFile.seek(0);
@@ -362,8 +359,8 @@ void main(in string[] args)
                     if (fastQTLData)
                     {
                         if (nomThreshold != 2)
-                            outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold,
-                                splitLine[2].to!double, splitLine[3].to!double));
+                            outFile.write(sep, betaIncompleteInverse(splitLine[2].to!double,
+                                splitLine[3].to!double, nomThreshold));
                         else
                             outFile.write(sep, "NA");
                     }
@@ -397,8 +394,8 @@ void main(in string[] args)
                     if (fastQTLData)
                     {
                         if (nomThreshold != 2)
-                            outFile.write(sep, gsl_cdf_beta_Pinv(nomThreshold,
-                                splitLine[2].to!double, splitLine[3].to!double));
+                            outFile.write(sep, betaIncompleteInverse(splitLine[2].to!double,
+                                splitLine[3].to!double, nomThreshold));
                         else
                             outFile.write(sep, "NA");
                     }

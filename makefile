@@ -28,4 +28,7 @@ test :
 	largeQvalue --boot --header --col 4 --out temp --param parameter_file data/vQTLresults.txt
 	diff temp data/boot_test | head
 	diff parameter_file data/boot_param | head
+	largeQvalue --fast 0.05 --out temp data/nominal
+	diff data/nominal_results temp | head
+	rm temp parameter_file
 
