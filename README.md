@@ -6,7 +6,7 @@ Given a whitespace separated table (specified by --input or as the last option o
 
 ### Binaries
 
-The binary for 64bit linux can be found here:
+The latest binary can be found in the bin folder on this site. An older version can be found here:
 
 ftp://ftp.sanger.ac.uk/pub/resources/software/largeqvalue/largeQvalue.tar.gz
 

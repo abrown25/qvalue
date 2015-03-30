@@ -9,7 +9,8 @@
     "sourceFiles": ["src/bootstrap.o", "src/libspline.a"],
     "libs": ["gsl", "gslcblas", "m", "blas"],
     "targetName": "largeQvalue",
+    "targetPath": "bin/",
     "preGenerateCommands": ["gcc -c src/bootstrap.c -o src/bootstrap.o"],
     "postBuildCommands": ["rm src/*.o",
-			  "strip largeQvalue"]
+			  "strip bin/largeQvalue"]
 }
