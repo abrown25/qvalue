@@ -70,31 +70,34 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
 
   if (opts.writeParam)
   {
+    // dfmt off
     paramFile.writeln("#The estimated value of π₀ is:            ", pi0Final, "\n");
     paramFile.writeln("#λ values to calculate this were:         [", lambda.to!(string[]).join(", "), "]\n\n",
           "#with the corresponding π₀ values:        [", pi0.to!(string[]).join(", "), "]\n\n",
           "#and mean squared error estimates:        [", mse.to!(string[]).join(", "), "]\n");
-    paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀:\n");
-    paramFile.writeln("plot.pi0.data <- data.frame(x = rep(c(", lambda.to!(string[]).join(", "), "), 100),
-                                y = c(", bootPi0.to!(string[]).join(", "), "))\n");
-    paramFile.writeln("plot.data <- data.frame(x = c(", lambda.to!(string[]).join(", "), "),
-                            y = c(", pi0.to!(string[]).join(", "), "),
-                            mse = c(", mse.to!(string[]).join(", "), "),
-                            minpi0 = ", minP, ",
-                            final = ", pi0Final, ")
+    paramFile.writeln("###R code to produce diagnostic plots for bootstrap estimates of π₀:");
+    paramFile.writeln("
+plot.pi0.data <- data.frame(x = rep(c(", lambda.to!(string[]).join(", "), "), 100),
+                            y = c(", bootPi0.to!(string[]).join(", "), "))");
+    paramFile.writeln("
+plot.data <- data.frame(x = c(", lambda.to!(string[]).join(", "), "),
+                        y = c(", pi0.to!(string[]).join(", "), "),
+                        mse = c(", mse.to!(string[]).join(", "), "),
+                        minpi0 = ", minP, ",
+                        final = ", pi0Final, ")
 
-    library(ggplot2)
-    plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.data, aes(x = x, y = y, group = x)) +
-                                                    geom_point(colour='blue') +
-                                                    geom_hline(yintercept = plot.data$minpi0, colour = 'blue') +
-                                                    geom_line(aes(x = x, y = mse), linetype = 'dashed') +
-                                                    geom_hline(yintercept = plot.data$final, colour = 'red') +
-                                                    geom_vline(xintercept = plot.data$x[plot.data$mse==min(plot.data$mse)], linetype = 'dashed') +
-                                                    ylim(0,1) +
-                                                    labs(x = expression(lambda), y = expression(pi[0])) +
-                                                    theme(axis.title = element_text(size = rel(2)))
-    print(plot1)
-    ");
+library(ggplot2)
+plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.data, aes(x = x, y = y, group = x)) +
+                                                geom_point(colour='blue') +
+                                                geom_hline(yintercept = plot.data$minpi0, colour = 'blue') +
+                                                geom_line(aes(x = x, y = mse), linetype = 'dashed') +
+                                                geom_hline(yintercept = plot.data$final, colour = 'red') +
+                                                geom_vline(xintercept = plot.data$x[plot.data$mse==min(plot.data$mse)], linetype = 'dashed') +
+                                                ylim(0,1) +
+                                                labs(x = expression(lambda), y = expression(pi[0])) +
+                                                theme(axis.title = element_text(size = rel(2)))
+print(plot1)");
+    //dfmt on
   }
   return pi0Final;
 }
@@ -151,23 +154,24 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
 
   if (opts.writeParam)
   {
+    //dfmt off
     paramFile.writeln("#The estimated value of π₀ is:         ", pi0Final, "\n");
     paramFile.writeln("#λ values to calculate this were:      [", lambda.to!(string[]).join(", "), "]\n\n",
           "#with the corresponding π₀ values:     [", pi0.to!(string[]).join(", "), "]\n\n",
           "#and spline-smoothed π₀ values:        [", pi0Est.to!(string[]).join(", "), "]\n");
     paramFile.writeln("###R code to produce diagnostic plots for spline estimates of π₀:\n
-    plot.data <- data.frame(lambda = c(", lambda.to!(string[]).join(", "), "),
-                            pi0 = c(", pi0.to!(string[]).join(", "), "),
-                            pi0Est = c(", pi0Est.to!(string[]).join(", "), "))\n");
+plot.data <- data.frame(lambda = c(", lambda.to!(string[]).join(", "), "),
+                        pi0 = c(", pi0.to!(string[]).join(", "), "),
+                        pi0Est = c(", pi0Est.to!(string[]).join(", "), "))\n");
     paramFile.writeln("library(ggplot2)
-    plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
-                                                                  geom_line(aes(x = lambda, y = pi0Est)) +
-                                                                  geom_abline(slope = 0, intercept = plot.data$pi0Est[nrow(plot.data)], col = 'red') +
-                                                                  labs(x = expression(lambda), y = expression(pi[0])) +
-                                                                  theme(axis.title = element_text(size = rel(2))) +
-                                                                  ylim(0, 1)
-    print(plot1)
-    ");
+plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
+                                                              geom_line(aes(x = lambda, y = pi0Est)) +
+                                                              geom_abline(slope = 0, intercept = plot.data$pi0Est[nrow(plot.data)], col = 'red') +
+                                                              labs(x = expression(lambda), y = expression(pi[0])) +
+                                                              theme(axis.title = element_text(size = rel(2))) +
+                                                              ylim(0, 1)
+print(plot1)");
+    //dfmt on
   }
   return pi0Final;
 }

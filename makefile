@@ -11,10 +11,15 @@ src/libspline.a : src/spline_src/* header/*
 	ar rcs src/libspline.a bsplvd.o bvalue.o bvalus.o dpbfa.o dpbsl.o interv.o sgram.o sinerp.o spline_fit.o sslvrg.o stxwx.o
 	rm -f bsplvd.o bvalue.o bvalus.o dpbfa.o dpbsl.o interv.o sgram.o sinerp.o spline_fit.o sslvrg.o stxwx.o
 
-.PHONY : sample clean boot test static install dmd
+.PHONY : ldc sample clean boot test static install dmd
 
 static	: $(SOURCES_D) $(LIB_GSL) src/bootstrap.o src/libspline.a
 	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) src/bootstrap.o src/libspline.a $(LIB_GSL) -o bin/largeQvalue
+	rm -f src/bootstrap.o largeQvalue.o
+	strip bin/largeQvalue
+
+ldc : $(SOURCES_D) src/bootstrap.o src/libspline.a
+	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -od=.dub/obj -d-version=Have_largeqvalue -Isrc/ src/bootstrap.o $(SOURCES_D) src/libspline.a -L=-lgsl -L=-lgslcblas -L=-lm -L=-lblas
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
