@@ -452,4 +452,21 @@ void splineFit(double* xs, double* ys, double* knot, int n, double dofoff,
         hs0, hs1, hs2, hs3, sg0, sg1, sg2, sg3, abd, p1ip, p2ip, &ld4, &ldnk,
         &ier);
   F77_CALL(bvalus)(&n, knot, coef, &nk, xs, results, &order);
+
+  free(ws);
+  free(coef);
+  free(sz);
+  free(lev);
+  free(xwy);
+  free(hs0);
+  free(hs1);
+  free(hs2);
+  free(hs3);
+  free(sg0);
+  free(sg1);
+  free(sg2);
+  free(sg3);
+  free(abd);
+  free(p1ip);
+  free(p2ip);
 }
