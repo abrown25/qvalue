@@ -20,4 +20,3 @@ plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
                                                               theme(axis.title = element_text(size = rel(2))) +
                                                               ylim(0, 1)
 print(plot1)
-

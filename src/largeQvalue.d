@@ -27,32 +27,48 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
   pi0Count ~= pVals.indexed(orderIndex).assumeSorted.lowerBound(lambda[0]).length;
 
   foreach (ref e; 1 .. lambda.length)
+  {
     pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $]).assumeSorted.lowerBound(
       lambda[e]).length;
+  }
 
   foreach (i, ref e; pi0Count)
+  {
     pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
+  }
+
   immutable double minP = pi0.reduce!min;
 
   double[] probs;
   probs ~= to!double(pi0Count[0]) / pVals.length;
+
   foreach (e; zip(pi0Count[0 .. ($ - 1)], pi0Count[1 .. $]))
+  {
     probs ~= to!double(e[1] - e[0]) / pVals.length;
+  }
 
   size_t[] bootCount = new size_t[lambda.length * 100];
   double[] bootPi0;
 
   bootSample(bootCount.ptr, probs.ptr, pVals.length, lambda.length, opts.seed);
   foreach (ref e; chunks(bootCount, lambda.length))
+  {
     foreach (i, ref f; e)
+    {
       bootPi0 ~= (pVals.length - f) / (1 - lambda[i]) / pVals.length;
+    }
+  }
 
   double[] mse = new double[lambda.length];
   mse[] = 0.0;
 
   foreach (ref e; chunks(bootPi0, lambda.length))
+  {
     foreach (i, ref f; e)
+    {
       mse[i] += pow(f - minP, 2);
+    }
+  }
 
   double minMSE = mse[0];
   double pi0Final = pi0[0];
@@ -65,7 +81,9 @@ double getBootPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, File 
       pi0Final = e[1];
     }
     else if (e[0] == minMSE && e[1] < pi0Final)
+    {
       pi0Final = e[1];
+    }
   }
 
   if (opts.writeParam)
@@ -99,6 +117,7 @@ plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.dat
 print(plot1)");
     //dfmt on
   }
+
   return pi0Final;
 }
 
@@ -114,17 +133,26 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
   pi0Count ~= pVals.indexed(orderIndex).assumeSorted.lowerBound(lambda[0]).length;
 
   foreach (ref e; 1 .. lambda.length)
+  {
     pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $]).assumeSorted.lowerBound(
       lambda[e]).length;
+  }
 
   foreach (i, ref e; pi0Count)
+  {
     pi0 ~= (pVals.length - e) / (1 - lambda[i]) / pVals.length;
+  }
 
   if (lambda.length != 1)
   {
     if (opts.logSmooth)
+    {
       foreach (ref e; pi0)
+      {
         e = log(e);
+      }
+    }
+
     double[] xs = lambda.map!(a => a / (lambda[$ - 1] - lambda[0])).array;
     double[] knot = [0.0, 0.0, 0.0] ~ xs ~ [1.0, 1.0, 1.0];
     splineFit(xs.ptr, pi0.ptr, knot.ptr, lambda.length.to!int, opts.df, pi0Est.ptr);
@@ -132,13 +160,19 @@ double getSmootherPi0(in Opts opts, in double[] pVals, in size_t[] orderIndex, F
     if (opts.logSmooth)
     {
       foreach (ref e; pi0)
+      {
         e = exp(e);
+      }
       foreach (ref e; pi0Est)
+      {
         e = exp(e);
+      }
     }
   }
   else
+  {
     pi0Est[0] = pi0[0];
+  }
 
   double pi0Final = fmin(pi0Est[$ - 1], 1);
 
@@ -173,6 +207,7 @@ plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
 print(plot1)");
     //dfmt on
   }
+
   return pi0Final;
 }
 
@@ -189,13 +224,14 @@ pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double 
     if (i == (len - 1) || fabs(pVal[e]) < fabs(pVal[orderIndex[i + 1]]))
     {
       foreach (ref j; orderIndex[(i - dupcount + 1) .. (i + 1)])
-        if (robust)
-          qVal[j] = pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[j], len)));
-        else
-          qVal[j] = pi0 * pVal[j] * len / (i + 1);
+      {
+        qVal[j] = robust ? pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[j], len))) : pi0 * pVal[j] * len / (
+          i + 1);
+      }
       dupcount = 0;
     }
   }
+
   return qVal;
 }
 
@@ -224,13 +260,21 @@ void main(in string[] args)
       tmpFile = File.tmpfile();
     }
     else
+    {
       inFile = File(opts.input);
+    }
     if (opts.outF == "")
+    {
       outFile = stdout;
+    }
     else
+    {
       outFile = File(opts.outF, "w");
+    }
     if (opts.writeParam)
+    {
       paramFile = File(opts.param, "w");
+    }
   }
   catch (Exception e)
   {
@@ -241,22 +285,29 @@ void main(in string[] args)
   double[] pVals;
   double pVal;
 
-  if (opts.header)
+  if (opts.header && !opts.getPi)
+  {
     outFile.writeln(chomp(inFile.readln), "\tQvalue");
+  }
 
   foreach (ref line; inFile.byLine)
   {
-    if (tmp)
+    if (tmp && !opts.getPi)
+    {
       tmpFile.writeln(line);
+    }
 
     auto splitLine = line.split;
+
     try
     {
       enforce(splitLine.length > opts.col - 1,
         new InputException("Column with p values doesn't exist"));
       pVal = to!double(splitLine[opts.col - 1]);
       if (!pVal.isNaN)
+      {
         pVals ~= pVal;
+      }
     }
     catch (ConvException e)
     {
@@ -272,7 +323,9 @@ void main(in string[] args)
   {
     enforce(pVals.length > 0, new InputException("No p values read"));
     foreach (ref e; pVals)
+    {
       enforce(e <= 1 && e >= 0, new InputException("Some p values are outside [0, 1] interval"));
+    }
   }
   catch (InputException e)
   {
@@ -284,131 +337,173 @@ void main(in string[] args)
   if (opts.issorted)
   {
     foreach (i, ref e; orderIndex)
-      e = i;
-  }
-  else
-    makeIndex!("a<b")(pVals, orderIndex);
-
-  double pi0Final;
-
-  if (opts.boot)
-    pi0Final = getBootPi0(opts, pVals, orderIndex, paramFile);
-  else if (opts.pi0.isNaN)
-    pi0Final = getSmootherPi0(opts, pVals, orderIndex, paramFile);
-  else
-  {
-    pi0Final = opts.pi0;
-    if (opts.writeParam)
-      paramFile.writeln("Using specified value of π₀ = ", pi0Final);
-  }
-
-  double[] qVal = pValtoQ(pVals, orderIndex, pi0Final, opts.robust);
-
-  reverse(orderIndex);
-
-  if (qVal[orderIndex[0]] > 1)
-    qVal[orderIndex[0]] = 1;
-
-  foreach (ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
-    qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
-
-  bool fastQTLData = opts.fast == 2.0 ? false : true;
-  double nomThreshold;
-
-  if (fastQTLData)
-  {
-    import std.algorithm : countUntil;
-
-    size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < opts.fast);
-    if (firstThreshold == -1)
-      nomThreshold = 2;
-    else if (firstThreshold == 0)
-      nomThreshold = pVals[orderIndex[0]];
-    else
-      nomThreshold = pVals[orderIndex[firstThreshold - 1]];
-  }
-
-  string sep = opts.sep;
-  string noPvalue;
-  string nanPvalue;
-  if (fastQTLData)
-  {
-    noPvalue = sep ~ "NA" ~ sep ~ "NA";
-    nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
-  }
-  else
-  {
-    noPvalue = sep ~ "NA";
-    nanPvalue = sep ~ "NaN";
-  }
-
-  import std.mathspecial : betaIncompleteInverse;
-
-  if (tmp)
-  {
-    tmpFile.seek(0);
-    size_t i = 0;
-    foreach (ref line; tmpFile.byLine)
     {
-      auto splitLine = line.split;
-      try
-      {
-        pVal = to!double(splitLine[opts.col - 1]);
-        if (!pVal.isNaN)
-        {
-          outFile.write(line, sep, qVal[i]);
-          i++;
-          if (fastQTLData)
-          {
-            if (nomThreshold != 2)
-              outFile.write(sep, betaIncompleteInverse(splitLine[2].to!double,
-                splitLine[3].to!double, nomThreshold));
-            else
-              outFile.write(sep, "NA");
-          }
-          outFile.writeln();
-        }
-        else
-          outFile.writeln(line, nanPvalue);
-      }
-      catch (ConvException e)
-      {
-        outFile.writeln(line, noPvalue);
-      }
+      e = i;
     }
   }
   else
   {
-    inFile.seek(0);
-    if (opts.header)
-      inFile.readln;
-    size_t i = 0;
-    foreach (ref line; inFile.byLine)
+    makeIndex!("a<b")(pVals, orderIndex);
+  }
+
+  double pi0Final;
+
+  if (opts.boot)
+  {
+    pi0Final = getBootPi0(opts, pVals, orderIndex, paramFile);
+  }
+  else if (opts.pi0.isNaN)
+  {
+    pi0Final = getSmootherPi0(opts, pVals, orderIndex, paramFile);
+  }
+  else
+  {
+    pi0Final = opts.pi0;
+    if (opts.writeParam)
     {
-      auto splitLine = line.split;
-      try
+      paramFile.writeln("Using specified value of π₀ = ", pi0Final);
+    }
+  }
+
+  if (opts.getPi)
+  {
+    outFile.writeln(pi0Final);
+  }
+  else
+  {
+    double[] qVal = pValtoQ(pVals, orderIndex, pi0Final, opts.robust);
+
+    reverse(orderIndex);
+
+    if (qVal[orderIndex[0]] > 1)
+    {
+      qVal[orderIndex[0]] = 1;
+    }
+    foreach (ref e; zip(orderIndex[0 .. ($ - 1)], orderIndex[1 .. $]))
+    {
+      qVal[e[1]] = min(qVal[e[1]], qVal[e[0]], 1);
+    }
+
+    bool fastQTLData = opts.fast == 2.0 ? false : true;
+    double nomThreshold;
+
+    if (fastQTLData)
+    {
+      import std.algorithm : countUntil;
+
+      size_t firstThreshold = orderIndex.countUntil!(a => qVal[a] < opts.fast);
+      if (firstThreshold == -1)
       {
-        pVal = to!double(splitLine[opts.col - 1]);
-        if (!pVal.isNaN)
-        {
-          outFile.write(line, sep, qVal[i]);
-          i++;
-          if (fastQTLData)
-          {
-            if (nomThreshold != 2)
-              outFile.write(sep, betaIncompleteInverse(splitLine[2].to!double,
-                splitLine[3].to!double, nomThreshold));
-            else
-              outFile.write(sep, "NA");
-          }
-          outFile.writeln();
-        }
-        else
-          outFile.writeln(line, nanPvalue);
+        nomThreshold = 2;
       }
-      catch (ConvException e)
+      else if (firstThreshold == 0)
       {
-        outFile.writeln(line, noPvalue);
+        nomThreshold = pVals[orderIndex[0]];
+      }
+      else
+      {
+        nomThreshold = pVals[orderIndex[firstThreshold - 1]];
+      }
+    }
+
+    string sep = opts.sep;
+    string noPvalue;
+    string nanPvalue;
+    if (fastQTLData)
+    {
+      noPvalue = sep ~ "NA" ~ sep ~ "NA";
+      nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
+    }
+    else
+    {
+      noPvalue = sep ~ "NA";
+      nanPvalue = sep ~ "NaN";
+    }
+
+    import std.mathspecial : betaIncompleteInverse;
+
+    if (tmp)
+    {
+      tmpFile.seek(0);
+      size_t i = 0;
+      foreach (ref line; tmpFile.byLine)
+      {
+        auto splitLine = line.split;
+        try
+        {
+          pVal = to!double(splitLine[opts.col - 1]);
+          if (!pVal.isNaN)
+          {
+            outFile.write(line, sep, qVal[i]);
+            i++;
+            if (fastQTLData)
+            {
+              if (nomThreshold != 2)
+              {
+                outFile.write(sep,
+                  betaIncompleteInverse(splitLine[2].to!double,
+                  splitLine[3].to!double, nomThreshold));
+              }
+              else
+              {
+                outFile.write(sep, "NA");
+              }
+            }
+            outFile.writeln();
+          }
+          else
+          {
+            outFile.writeln(line, nanPvalue);
+          }
+        }
+        catch (ConvException e)
+        {
+          outFile.writeln(line, noPvalue);
+        }
+      }
+    }
+    else
+    {
+      inFile.seek(0);
+      if (opts.header)
+      {
+        inFile.readln;
+      }
+      size_t i = 0;
+      foreach (ref line; inFile.byLine)
+      {
+        auto splitLine = line.split;
+        try
+        {
+          pVal = to!double(splitLine[opts.col - 1]);
+          if (!pVal.isNaN)
+          {
+            outFile.write(line, sep, qVal[i]);
+            i++;
+            if (fastQTLData)
+            {
+              if (nomThreshold != 2)
+              {
+                outFile.write(sep,
+                  betaIncompleteInverse(splitLine[2].to!double,
+                  splitLine[3].to!double, nomThreshold));
+              }
+              else
+              {
+                outFile.write(sep, "NA");
+              }
+            }
+            outFile.writeln();
+          }
+          else
+          {
+            outFile.writeln(line, nanPvalue);
+          }
+        }
+        catch (ConvException e)
+        {
+          outFile.writeln(line, noPvalue);
+        }
       }
     }
   }

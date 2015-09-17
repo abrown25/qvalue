@@ -72,6 +72,8 @@ OPTIONS
        --fast DOUBLE
                  Report nominal P value threshold for each gene corresponding to given FDR threshold when input is a fastQTL results file.
 
+       --getPi0  Output only the π₀ value.
+
 
 
 largeQvalue-1.0.1                                                                              27th March 2015                                                                                 largeQvalue(1)
@@ -111,6 +113,7 @@ class Opts
   string param = "";
   string outF = "";
   double fast = 2.0;
+  bool getPi = false;
 
   this(string[] args)
   {
@@ -121,7 +124,7 @@ class Opts
         "boot", &boot, "log", &logSmooth, "robust", &robust, "issorted",
         &issorted, "pi0", &pi0, "lambda", &lambda, "sep", &sep, "df", &df,
         "col", &col, "seed", &seed, "input", &input, "param", &param,
-        "out", &outF, "fast", &fast);
+        "out", &outF, "fast", &fast, "getPi0", &getPi);
     }
     catch (Exception e)
     {
@@ -175,11 +178,15 @@ class Opts
     }
 
     if (sep == "s" || sep == "space")
+    {
       sep = " ";
+    }
     else
     {
       if (sep != "t" && sep != "tab")
+      {
         stderr.writeln("--sep misspecified, defaulting to tab.");
+      }
       sep = "\t";
     }
 
@@ -195,9 +202,13 @@ class Opts
     }
 
     if (args.length > 1 && input == "")
+    {
       input = args[$ - 1];
+    }
     if (param != "")
+    {
       writeParam = true;
+    }
     if (help)
     {
       writeln(helpString);

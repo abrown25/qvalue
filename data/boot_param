@@ -28,4 +28,3 @@ plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.dat
                                                 labs(x = expression(lambda), y = expression(pi[0])) +
                                                 theme(axis.title = element_text(size = rel(2)))
 print(plot1)
-
