@@ -107,7 +107,7 @@ class Opts
   double lambdaEnd;
   double lambdaStep;
   double df = 3;
-  size_t col = 1;
+  size_t col = 0;
   size_t seed;
   string input = "";
   string param = "";
@@ -173,7 +173,6 @@ class Opts
         stderr.writeln("Requested nominal P value threshold is not in [0, 1) interval.");
         exit(0);
       }
-      col = 10;
       sep = "s";
     }
 
@@ -188,6 +187,11 @@ class Opts
         stderr.writeln("--sep misspecified, defaulting to tab.");
       }
       sep = "\t";
+    }
+
+    if (col == 0)
+    {
+      col = fast==2 ? 11 : 1;
     }
 
     try
