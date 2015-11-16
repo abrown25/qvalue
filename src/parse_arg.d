@@ -191,9 +191,10 @@ class Opts
 
     if (col == 0)
     {
-      col = fast==2 ? 11 : 1;
+      col = fast == 2 ? 11 : 1;
     }
-
+    // columns are indexed from zero
+    col--;
     try
     {
       enforce(pi0.isNaN || (pi0 > 0 && pi0 <= 1),

@@ -290,8 +290,12 @@ void main(in string[] args)
     outFile.writeln(chomp(inFile.readln), "\tQvalue");
   }
 
+  size_t counter = 0;
+
   foreach (ref line; inFile.byLine)
   {
+    counter++;
+
     if (tmp && !opts.getPi)
     {
       tmpFile.writeln(line);
@@ -301,9 +305,11 @@ void main(in string[] args)
 
     try
     {
-      enforce(splitLine.length > opts.col - 1,
-        new InputException("Column with p values doesn't exist"));
-      pVal = to!double(splitLine[opts.col - 1]);
+      enforce(splitLine.length > opts.col,
+        new InputException(
+        "Requested column " ~ to!string(opts.col + 1) ~ ", but row " ~ to!string(counter) ~ " has only " ~ splitLine
+        .length.to!string ~ " columns."));
+      pVal = to!double(splitLine[opts.col]);
       if (!pVal.isNaN)
       {
         pVals ~= pVal;
@@ -431,7 +437,7 @@ void main(in string[] args)
         auto splitLine = line.split;
         try
         {
-          pVal = to!double(splitLine[opts.col - 1]);
+          pVal = to!double(splitLine[opts.col]);
           if (!pVal.isNaN)
           {
             outFile.write(line, sep, qVal[i]);
@@ -475,7 +481,7 @@ void main(in string[] args)
         auto splitLine = line.split;
         try
         {
-          pVal = to!double(splitLine[opts.col - 1]);
+          pVal = to!double(splitLine[opts.col]);
           if (!pVal.isNaN)
           {
             outFile.write(line, sep, qVal[i]);
