@@ -1,5 +1,8 @@
+import core.stdc.stdlib : exit;
 import std.algorithm : makeIndex, min, reduce, reverse;
-import std.array : array, join;
+import std.array : array, join, split;
+import std.conv : ConvException, to;
+import std.exception : enforce;
 import std.math : exp, fabs, fmin, isNaN, log, pow;
 import std.range : assumeSorted, chunks, indexed, iota, zip;
 import std.stdio : File, stderr, stdin, stdout, tmpfile, write;
@@ -237,11 +240,6 @@ pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double 
 
 void main(in string[] args)
 {
-  if (args.length == 1)
-  {
-    writeln(helpString);
-    exit(0);
-  }
 
   Opts opts = new Opts(to!(string[])(args));
 

@@ -1,83 +1,12 @@
 module parse_arg;
 
 import std.array : split;
-import std.c.stdlib : exit;
+import core.stdc.stdlib : exit;
 import std.conv : to, ConvException;
 import std.exception : enforce;
 import std.getopt;
 import std.math : isNaN;
 import std.stdio : stderr, writeln;
-
-static immutable string helpString = "
-largeQvalue(1)                                                                               Statistical genetics                                                                              largeQvalue(1)
-
-
-
-NAME
-       largeQvalue: A program for calculating FDR estimates with large datasets.
-
-SYNOPSIS
-       largeQvalue [options]
-
-
-DESCRIPTION
-       This  is  an  implementation  of the qvalue package (Alan Dabney, John D. Storey and with assistance from Gregory R. Warnes (). qvalue: Q-value estimation for false discovery rate control. R package
-       version 1.34.0.) which is designed for use with large datasets where memory or computation time may be an issue with R. It has been used to analyse full cis scans of gene expression data, with  hun-
-       dreds of millions of P values. A description of the algorithms and instructions for usage can be found in the accompanying paper: http://biorxiv.org/content/early/2014/10/06/010074.
-
-
-OPTIONS
-       --help    Print help and quit.
-
-       --version Print version and quit.
-
-       --input CHAR
-                 File  containing  p  values  to analyse. This can also be specified by the last argument on the command-line after all others have been parsed. If neither are present, it is taken from the
-                 stdin [stdin].
-
-       --out CHAR
-                 File to write results to [stdout].
-
-       --param CHAR
-                 Print out parameter list to specified file.
-
-       --header  Input has header line [FALSE].
-
-       --col INT Column with p values [1].
-
-       --sep CHAR
-                 Separator to use to separate the column with q values. Specified as either space or tab (which can be shortened to s or t) [tab].
-
-       --issorted
-                 File has already been sorted with no missing values [FALSE].
-
-       --pi0 DOUBLE
-                 Use given value of pi0.
-
-       --lambda DOUBLE(,DOUBLE,DOUBLE)
-                 Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) [0,0.9,0.05].
-
-       --robust  More robust values for small p values [FALSE].
-
-       --df DOUBLE
-                 Number of degrees of freedom used by the spline when estimating pi0 [3].
-
-       --log     Smoothing spline applied to log pi0 values [FALSE].
-
-       --boot    Apply bootstrap method to find pi0 [FALSE].
-
-       --seed DOUBLE
-                 Set seed for generating bootstrap samples [0].
-
-       --fast DOUBLE
-                 Report nominal P value threshold for each gene corresponding to given FDR threshold when input is a fastQTL results file.
-
-       --getPi0  Output only the π₀ value.
-
-
-
-largeQvalue-1.0.1                                                                              27th March 2015                                                                                 largeQvalue(1)
-";
 
 static immutable string versionString = "largeQvalue: version 1.0.1";
 
@@ -91,8 +20,6 @@ class InputException : Exception
 
 class Opts
 {
-
-  bool help = false;
   bool version_ = false;
   bool header = false;
   bool writeParam = false;
@@ -117,14 +44,56 @@ class Opts
 
   this(string[] args)
   {
-
+    bool noArgs = args.length == 1;
     try
     {
-      getopt(args, "help", &help, "version", &version_, "header", &header,
-        "boot", &boot, "log", &logSmooth, "robust", &robust, "issorted",
-        &issorted, "pi0", &pi0, "lambda", &lambda, "sep", &sep, "df", &df,
-        "col", &col, "seed", &seed, "input", &input, "param", &param,
-        "out", &outF, "fast", &fast, "getPi0", &getPi);
+      // dfmt off
+      auto options = getopt(args,
+			    "input", "File  containing  p  values  to analyse. This can also be specified by the last argument on the command-line after all others have been parsed. If neither are present, it is taken from the stdin [stdin].", &input,
+			    "out", "File to write results to [stdout].", &outF,
+			    "param", "Print out parameter list to specified file.", &param,
+			    "header", "Input has header line [FALSE].", &header,
+			    "col", "Column with p values [1].", &col,
+			    "sep", "Separator to use to separate the column with q values. Specified as either space or tab (which can be shortened to s or t) [tab].", &sep,
+			    "issorted", "File has already been sorted with no missing values [FALSE].", &issorted,
+			    "pi0", "Use given value of  π₀.", &pi0,
+			    "lambda", "Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) [0,0.9,0.05].", &lambda,
+			    "robust", "More robust estimates for small p values [FALSE].", &robust,
+			    "df", "Number of degrees of freedom used by the spline when estimating  π₀ [3].", &df,
+			    "log", "Smoothing spline applied to log  π₀ values [FALSE].", &logSmooth,
+			    "boot", "Apply bootstrap method to find  π₀ [FALSE].", &boot,
+			    "seed", "Set seed for generating bootstrap samples [0].", &seed,
+			    "fast", "Report nominal P value threshold for each gene corresponding to given FDR threshold when input is a fastQTL results file.", &fast,
+			    "getPi0", "Output only the π₀ value.", &getPi,
+			    "version", "Print version information", &version_,
+);
+// dfmt on
+      if (options.helpWanted || noArgs)
+      {
+	defaultGetoptPrinter("largeQvalue(1)                                                                               Statistical genetics                                                                              largeQvalue(1)
+
+
+
+NAME
+       largeQvalue: A program for calculating FDR estimates with large datasets.
+
+SYNOPSIS
+       largeQvalue [options]
+
+
+DESCRIPTION
+       This  is  an  implementation  of the qvalue package (Alan Dabney, John D. Storey and with assistance from Gregory R. Warnes (). qvalue: Q-value estimation for false discovery rate control. R package
+       version 1.34.0.) which is designed for use with large datasets where memory or computation time may be an issue with R. It has been used to analyse full cis scans of gene expression data, with  hun-
+       dreds of millions of P values. A description of the algorithms and instructions for usage can be found in the accompanying paper: http://biorxiv.org/content/early/2014/10/06/010074.
+
+
+OPTIONS:
+
+", options.options);
+	writeln("largeQvalue-1.0.1                                                                              27th March 2015                                                                                 largeQvalue(1)
+");
+	exit(0);
+      }
     }
     catch (Exception e)
     {
@@ -213,11 +182,6 @@ class Opts
     if (param != "")
     {
       writeParam = true;
-    }
-    if (help)
-    {
-      writeln(helpString);
-      exit(0);
     }
     if (version_)
     {
