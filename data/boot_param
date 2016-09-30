@@ -26,5 +26,6 @@ plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.dat
                                                 geom_vline(xintercept = plot.data$x[plot.data$mse==min(plot.data$mse)], linetype = 'dashed') +
                                                 ylim(0,1) +
                                                 labs(x = expression(lambda), y = expression(pi[0])) +
-                                                theme(axis.title = element_text(size = rel(2)))
+                                                theme(axis.title = element_text(size = rel(2)), axis.text = element_text(size = rel(2))) +
+                                                theme_bw()
 print(plot1)

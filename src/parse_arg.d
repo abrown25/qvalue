@@ -29,7 +29,8 @@ class Opts
   bool issorted = false;
   double pi0;
   string lambda = "0,0.9,0.05";
-  string sep = "t";
+  bool space;
+  string sep = "\t";
   double lambdaStart;
   double lambdaEnd;
   double lambdaStep;
@@ -49,23 +50,23 @@ class Opts
     {
       // dfmt off
       auto options = getopt(args,
-			    "input", "File  containing  p  values  to analyse. This can also be specified by the last argument on the command-line after all others have been parsed. If neither are present, it is taken from the stdin [stdin].", &input,
-			    "out", "File to write results to [stdout].", &outF,
-			    "param", "Print out parameter list to specified file.", &param,
-			    "header", "Input has header line [FALSE].", &header,
-			    "col", "Column with p values [1].", &col,
-			    "sep", "Separator to use to separate the column with q values. Specified as either space or tab (which can be shortened to s or t) [tab].", &sep,
-			    "issorted", "File has already been sorted with no missing values [FALSE].", &issorted,
-			    "pi0", "Use given value of  π₀.", &pi0,
-			    "lambda", "Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) [0,0.9,0.05].", &lambda,
-			    "robust", "More robust estimates for small p values [FALSE].", &robust,
-			    "df", "Number of degrees of freedom used by the spline when estimating  π₀ [3].", &df,
-			    "log", "Smoothing spline applied to log  π₀ values [FALSE].", &logSmooth,
-			    "boot", "Apply bootstrap method to find  π₀ [FALSE].", &boot,
-			    "seed", "Set seed for generating bootstrap samples [0].", &seed,
-			    "fast", "Report nominal P value threshold for each gene corresponding to given FDR threshold when input is a fastQTL results file.", &fast,
-			    "getPi0", "Output only the π₀ value.", &getPi,
-			    "version", "Print version information", &version_,
+			    "input", "File containing p values to analyse. This can also be specified by the last argument on the command-line after all others have been parsed. If neither are present, it is taken from the stdin [stdin].\n", &input,
+			    "out", "File to write results to [stdout].\n", &outF,
+			    "param", "Print out parameter list to specified file.\n", &param,
+			    "header", "Input has header line [FALSE].\n", &header,
+			    "col", "Column with p values [1].\n", &col,
+			    "space", "Columns are separated by spaces instead of tabs.\n", &space,
+			    "issorted", "File has already been sorted with no missing values [FALSE].\n", &issorted,
+			    "pi0", "Use given value of π₀.\n", &pi0,
+			    "lambda", "Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) [0,0.9,0.05].\n", &lambda,
+			    "robust", "More robust estimates for small p values [FALSE].\n", &robust,
+			    "df", "Number of degrees of freedom used by the spline when estimating π₀ [3].\n", &df,
+			    "log", "Smoothing spline applied to log π₀ values [FALSE].\n", &logSmooth,
+			    "boot", "Apply bootstrap method to find π₀ [FALSE].\n", &boot,
+			    "seed", "Set seed for generating bootstrap samples [0].\n", &seed,
+			    "fast", "Report nominal P value threshold for each gene corresponding to given FDR threshold when input is a fastQTL results file.\n", &fast,
+			    "getPi0", "Output only the π₀ value.\n", &getPi,
+			    "version", "Print version information.\n", &version_,
 );
 // dfmt on
       if (options.helpWanted || noArgs)
@@ -82,9 +83,7 @@ SYNOPSIS
 
 
 DESCRIPTION
-       This  is  an  implementation  of the qvalue package (Alan Dabney, John D. Storey and with assistance from Gregory R. Warnes (). qvalue: Q-value estimation for false discovery rate control. R package
-       version 1.34.0.) which is designed for use with large datasets where memory or computation time may be an issue with R. It has been used to analyse full cis scans of gene expression data, with  hun-
-       dreds of millions of P values. A description of the algorithms and instructions for usage can be found in the accompanying paper: http://biorxiv.org/content/early/2014/10/06/010074.
+       This is an implementation of the qvalue package (Alan Dabney, John D. Storey and with assistance from Gregory R. Warnes (). qvalue: Q-value estimation for false discovery rate control. R package version 1.34.0.) which is designed for use with large datasets where memory or computation time may be an issue with R. It has been used to analyse full cis scans of gene expression data, with hundreds of millions of P values. A description of the algorithms and instructions for usage can be found in the accompanying paper: http://biorxiv.org/content/early/2014/10/06/010074.
 
 
 OPTIONS:
@@ -142,20 +141,12 @@ OPTIONS:
         stderr.writeln("Requested nominal P value threshold is not in [0, 1) interval.");
         exit(0);
       }
-      sep = "s";
-    }
-
-    if (sep == "s" || sep == "space")
-    {
       sep = " ";
     }
-    else
+
+    if (space)
     {
-      if (sep != "t" && sep != "tab")
-      {
-        stderr.writeln("--sep misspecified, defaulting to tab.");
-      }
-      sep = "\t";
+      sep = " ";
     }
 
     if (col == 0)

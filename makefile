@@ -1,8 +1,8 @@
 SOURCES_D = src/largeQvalue.d src/parse_arg.d
-LIB_GSL = /usr/lib/libblas/libblas.a /usr/lib/libgsl.a /usr/lib/libgslcblas.a
+LIB_GSL = /usr/lib/libblas.a /usr/lib/libgsl.a /usr/lib/libgslcblas.a
 
 bin/largeQvalue : $(SOURCES_D) src/bootstrap.o src/libspline.a
-	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) src/bootstrap.o src/libspline.a -lblas -lgsl -lgslcblas -lm -o bin/largeQvalue
+	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) src/bootstrap.o src/libspline.a -lblas -lgsl -lgslcblas -lcurl -o bin/largeQvalue
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
@@ -14,23 +14,23 @@ src/libspline.a : src/spline_src/* header/*
 .PHONY : ldc sample clean boot test static install dmd
 
 static	: $(SOURCES_D) $(LIB_GSL) src/bootstrap.o src/libspline.a
-	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) src/bootstrap.o src/libspline.a $(LIB_GSL) -o bin/largeQvalue
+	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -d-version=Have_largeqvalue -Isrc/ src/bootstrap.o $(SOURCES_D) src/bootstrap.o src/libspline.a $(LIB_GSL)
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
 ldc : $(SOURCES_D) src/bootstrap.o src/libspline.a
-	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -od=.dub/obj -d-version=Have_largeqvalue -Isrc/ src/bootstrap.o $(SOURCES_D) src/libspline.a -L=-lgsl -L=-lgslcblas -L=-lm -L=-lblas
+	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -d-version=Have_largeqvalue -Isrc/ src/bootstrap.o $(SOURCES_D) src/libspline.a -L=-lgsl -L=-lgslcblas -L=-lm -L=-lblas
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
-dmd	: $(SOURCES_D) $(LIB_GSL) src/bootstrap.o src/libspline.a
-	dmd -release -inline -O -w -version=Have_largeqvalue $(SOURCES_D) src/bootstrap.o src/libspline.a $(LIB_GSL) -ofbin/largeQvalue
+dmd	: $(SOURCES_D) src/bootstrap.o src/libspline.a
+	dmd -release -inline -O -w -version=Have_largeqvalue $(SOURCES_D) src/bootstrap.o src/libspline.a -L-lgsl -L-lgslcblas -L-lblas -ofbin/largeQvalue
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
 install : bin/largeQvalue largeQvalue.1
-	ln -s $(shell pwd)/bin/largeQvalue /usr/local/bin/
-	ln -s $(shell pwd)/largeQvalue.1 /usr/local/man/man1/
+	cp -v $(shell pwd)/bin/largeQvalue /usr/local/bin/
+	cp -v $(shell pwd)/largeQvalue.1 /usr/local/man/man1/
 
 clean :
 	rm -f *.o bin/largeQvalue

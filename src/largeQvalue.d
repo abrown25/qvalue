@@ -116,7 +116,8 @@ plot1 <- ggplot(plot.data, aes(x = x, y = y)) + geom_boxplot(data = plot.pi0.dat
                                                 geom_vline(xintercept = plot.data$x[plot.data$mse==min(plot.data$mse)], linetype = 'dashed') +
                                                 ylim(0,1) +
                                                 labs(x = expression(lambda), y = expression(pi[0])) +
-                                                theme(axis.title = element_text(size = rel(2)))
+                                                theme(axis.title = element_text(size = rel(2)), axis.text = element_text(size = rel(2))) +
+                                                theme_bw()
 print(plot1)");
     //dfmt on
   }
@@ -205,7 +206,8 @@ plot1 <- ggplot(data = plot.data, aes(x = lambda, y = pi0)) + geom_point() +
                                                               geom_line(aes(x = lambda, y = pi0Est)) +
                                                               geom_abline(slope = 0, intercept = plot.data$pi0Est[nrow(plot.data)], col = 'red') +
                                                               labs(x = expression(lambda), y = expression(pi[0])) +
-                                                              theme(axis.title = element_text(size = rel(2))) +
+                                                              theme(axis.title = element_text(size = rel(2)), axis.text = element_text(size = rel(2))) +
+                                                              theme_bw() +
                                                               ylim(0, 1)
 print(plot1)");
     //dfmt on
