@@ -1,8 +1,8 @@
-SOURCES_D = src/largeQvalue.d src/parse_arg.d
+SOURCES_D = src/main.d src/all_p_vals.d src/parse_arg.d src/pi0_calc.d src/threshold.d
 LIB_GSL = /usr/lib/libblas.a /usr/lib/libgsl.a /usr/lib/libgslcblas.a
 
 bin/largeQvalue : $(SOURCES_D) src/bootstrap.o src/libspline.a
-	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) src/bootstrap.o src/libspline.a -lblas -lgsl -lgslcblas -lcurl -o bin/largeQvalue
+	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -d-version=Have_largeqvalue -Isrc/ src/bootstrap.o $(SOURCES_D) src/libspline.a -L=-lgsl -L=-lgslcblas -L=-lm -L=-lblas
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
@@ -18,8 +18,8 @@ static	: $(SOURCES_D) $(LIB_GSL) src/bootstrap.o src/libspline.a
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
-ldc : $(SOURCES_D) src/bootstrap.o src/libspline.a
-	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -d-version=Have_largeqvalue -Isrc/ src/bootstrap.o $(SOURCES_D) src/libspline.a -L=-lgsl -L=-lgslcblas -L=-lm -L=-lblas
+gdc : $(SOURCES_D) src/bootstrap.o src/libspline.a
+	gdc -frelease -finline-functions -O3 -Werror -Wall -fversion=Have_largeQvalue $(SOURCES_D) src/bootstrap.o src/libspline.a -lblas -lgsl -lgslcblas -lcurl -o bin/largeQvalue
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
