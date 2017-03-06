@@ -13,8 +13,7 @@ import parse_arg : InputException, Opts;
 
 extern (C)
 {
-  void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize,
-    size_t seed);
+  void bootSample(size_t* bootCount, double* probs, size_t total, size_t countSize, size_t seed);
 }
 
 extern (C)
@@ -22,8 +21,7 @@ extern (C)
   void splineFit(double* xs, double* ys, double* knot, int n, double dofoff, double* results);
 }
 
-
-size_t[] binPVals (ref double[] pVals, ref size_t[] orderIndex, ref Opts opts)
+size_t[] binPVals(ref double[] pVals, ref size_t[] orderIndex, ref Opts opts)
 {
   double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;
   size_t[] pi0Count;
@@ -32,13 +30,14 @@ size_t[] binPVals (ref double[] pVals, ref size_t[] orderIndex, ref Opts opts)
 
   foreach (ref e; 1 .. lambda.length)
   {
-    pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $]).assumeSorted.lowerBound(
-      lambda[e]).length;
+    pi0Count ~= pi0Count[$ - 1] + pVals.indexed(orderIndex[pi0Count[$ - 1] .. $])
+      .assumeSorted.lowerBound(lambda[e]).length;
   }
 
   return pi0Count;
-  
+
 }
+
 double getBootPi0(in Opts opts, in size_t[] pi0Count, size_t nPvals, File paramFile)
 {
   double[] lambda = iota(opts.lambdaStart, opts.lambdaEnd, opts.lambdaStep).array;

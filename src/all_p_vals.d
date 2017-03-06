@@ -1,5 +1,5 @@
 import core.stdc.stdlib : exit;
-import std.algorithm : makeIndex, min, reduce, reverse;
+import std.algorithm : canFind, makeIndex, min, reduce, reverse;
 import std.array : array, join, split;
 import std.conv : ConvException, to;
 import std.exception : enforce;
@@ -11,8 +11,7 @@ import std.string : chomp;
 import parse_arg;
 import pi0_calc : binPVals, getBootPi0, getSmootherPi0;
 
-pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double pi0,
-  bool robust)
+pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double pi0, bool robust)
 {
   immutable size_t len = pVal.length;
   auto qVal = new double[len];
@@ -25,8 +24,8 @@ pure nothrow double[] pValtoQ(in double[] pVal, ref size_t[] orderIndex, double 
     {
       foreach (ref j; orderIndex[(i - dupcount + 1) .. (i + 1)])
       {
-        qVal[j] = robust ? pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[j], len))) : pi0 * pVal[j] * len / (
-          i + 1);
+        qVal[j] = robust ? pi0 * pVal[j] * len / ((i + 1) * (1 - pow(1 - pVal[j], len)))
+          : pi0 * pVal[j] * len / (i + 1);
       }
       dupcount = 0;
     }
@@ -98,9 +97,8 @@ void all_p_values(Opts opts)
     try
     {
       enforce(splitLine.length > opts.col,
-        new InputException(
-        "Requested column " ~ to!string(opts.col + 1) ~ ", but row " ~ to!string(counter) ~ " has only " ~ splitLine
-        .length.to!string ~ " columns."));
+          new InputException("Requested column " ~ to!string(opts.col + 1) ~ ", but row " ~ to!string(
+            counter) ~ " has only " ~ splitLine.length.to!string ~ " columns."));
       pVal = to!double(splitLine[opts.col]);
       if (!pVal.isNaN)
       {
@@ -206,24 +204,25 @@ void all_p_values(Opts opts)
       }
     }
 
-    string sep = opts.sep;
     string noPvalue;
     string nanPvalue;
-    if (fastQTLData)
-    {
-      noPvalue = sep ~ "NA" ~ sep ~ "NA";
-      nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
-    }
-    else
-    {
-      noPvalue = sep ~ "NA";
-      nanPvalue = sep ~ "NaN";
-    }
 
     import std.mathspecial : betaIncompleteInverse;
 
     if (tmp)
     {
+      tmpFile.seek(0);
+      auto sep = tmpFile.readln.canFind("\t") ? "\t" : " ";
+      if (fastQTLData)
+      {
+        noPvalue = sep ~ "NA" ~ sep ~ "NA";
+        nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
+      }
+      else
+      {
+        noPvalue = sep ~ "NA";
+        nanPvalue = sep ~ "NaN";
+      }
       tmpFile.seek(0);
       size_t i = 0;
       foreach (ref line; tmpFile.byLine)
@@ -240,9 +239,8 @@ void all_p_values(Opts opts)
             {
               if (nomThreshold != 2)
               {
-                outFile.write(sep,
-                  betaIncompleteInverse(splitLine[2].to!double,
-                  splitLine[3].to!double, nomThreshold));
+                outFile.write(sep, betaIncompleteInverse(splitLine[2].to!double,
+                    splitLine[3].to!double, nomThreshold));
               }
               else
               {
@@ -265,6 +263,19 @@ void all_p_values(Opts opts)
     else
     {
       inFile.seek(0);
+      auto sep = inFile.readln.canFind("\t") ? "\t" : " ";
+      if (fastQTLData)
+      {
+        noPvalue = sep ~ "NA" ~ sep ~ "NA";
+        nanPvalue = sep ~ "NaN" ~ sep ~ "NaN";
+      }
+      else
+      {
+        noPvalue = sep ~ "NA";
+        nanPvalue = sep ~ "NaN";
+      }
+      inFile.seek(0);
+
       if (opts.header)
       {
         inFile.readln;
@@ -284,9 +295,8 @@ void all_p_values(Opts opts)
             {
               if (nomThreshold != 2)
               {
-                outFile.write(sep,
-                  betaIncompleteInverse(splitLine[2].to!double,
-                  splitLine[3].to!double, nomThreshold));
+                outFile.write(sep, betaIncompleteInverse(splitLine[2].to!double,
+                    splitLine[3].to!double, nomThreshold));
               }
               else
               {

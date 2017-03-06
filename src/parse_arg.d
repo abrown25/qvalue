@@ -30,7 +30,6 @@ class Opts
   double pi0;
   string lambda = "0,0.9,0.05";
   bool space;
-  string sep = "\t";
   double lambdaStart;
   double lambdaEnd;
   double lambdaStep;
@@ -56,7 +55,6 @@ class Opts
 			    "param", "Print out parameter list to specified file.\n", &param,
 			    "header", "Input has header line [FALSE].\n", &header,
 			    "col", "Column with p values [1].\n", &col,
-			    "space", "Columns are separated by spaces instead of tabs.\n", &space,
 			    "issorted", "File has already been sorted with no missing values [FALSE].\n", &issorted,
 			    "pi0", "Use given value of π₀.\n", &pi0,
 			    "lambda", "Either a fixed number or a sequence given as 0,0.9,0.05 (start,end,step) [0,0.9,0.05].\n", &lambda,
@@ -73,7 +71,7 @@ class Opts
 // dfmt on
       if (options.helpWanted || noArgs)
       {
-	defaultGetoptPrinter("largeQvalue(1)                                                                               Statistical genetics                                                                              largeQvalue(1)
+        defaultGetoptPrinter("largeQvalue(1)                                                                               Statistical genetics                                                                              largeQvalue(1)
 
 
 
@@ -91,9 +89,9 @@ DESCRIPTION
 OPTIONS:
 
 ", options.options);
-	writeln("largeQvalue-1.0.1                                                                              27th March 2015                                                                                 largeQvalue(1)
+        writeln("largeQvalue-1.0.1                                                                              27th March 2015                                                                                 largeQvalue(1)
 ");
-	exit(0);
+        exit(0);
       }
     }
     catch (Exception e)
@@ -109,7 +107,7 @@ OPTIONS:
       if (lambdaOpts.length == 1)
       {
         enforce(lambdaStart >= 0 && lambdaStart < 1,
-          new InputException("lambda must be in interval [0, 1)"));
+            new InputException("lambda must be in interval [0, 1)"));
         lambdaEnd = lambdaStart + 1;
         lambdaStep = 1;
       }
@@ -118,11 +116,11 @@ OPTIONS:
         lambdaStep = lambdaOpts[2];
         lambdaEnd = lambdaOpts[1] + lambdaStep;
         enforce(lambdaEnd > lambdaStart + df * lambdaStep,
-          new InputException("Lambda sequence too short to estimate splines"));
+            new InputException("Lambda sequence too short to estimate splines"));
         enforce(lambdaStart >= 0 && lambdaEnd < 1,
-          new InputException("Lambda values must lie within [0, 1) interval"));
+            new InputException("Lambda values must lie within [0, 1) interval"));
         enforce(df >= 1 && df < (lambdaEnd - lambdaStart) / lambdaStep,
-          new InputException("df must be between 1 and length of lambda"));
+            new InputException("df must be between 1 and length of lambda"));
       }
     }
     catch (ConvException e)
@@ -143,12 +141,6 @@ OPTIONS:
         stderr.writeln("Requested nominal P value threshold is not in [0, 1) interval.");
         exit(0);
       }
-      sep = " ";
-    }
-
-    if (space)
-    {
-      sep = " ";
     }
 
     if (col == 0)
@@ -160,7 +152,7 @@ OPTIONS:
     try
     {
       enforce(pi0.isNaN || (pi0 > 0 && pi0 <= 1),
-        new InputException("pi0 must be in (0, 1] interval"));
+          new InputException("pi0 must be in (0, 1] interval"));
     }
     catch (InputException e)
     {

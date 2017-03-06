@@ -3,7 +3,7 @@ import pi0_calc : getBootPi0, getSmootherPi0;
 
 import core.stdc.stdlib : exit;
 import std.array : array, split;
-import std.algorithm : cumulativeFold, makeIndex, min, reverse;
+import std.algorithm : canFind, cumulativeFold, makeIndex, min, reverse;
 import std.conv : ConvException, to;
 import std.exception : enforce;
 import std.math : fabs, isNaN, pow;
@@ -25,7 +25,7 @@ struct SignificantLine
 }
 
 void pValtoQ(ref SignificantLine[] pVals, ref size_t[] orderIndex, double pi0,
-	     bool robust, size_t len)
+    bool robust, size_t len)
 {
   size_t dupcount = 0;
 
@@ -36,8 +36,8 @@ void pValtoQ(ref SignificantLine[] pVals, ref size_t[] orderIndex, double pi0,
     {
       foreach (ref j; orderIndex[(i - dupcount + 1) .. (i + 1)])
       {
-        pVals[j].qVal = robust ? pi0 * pVals[j].pVal * len / ((i + 1) * (1 - pow(1 - pVals[j].pVal, len))) : pi0 * pVals[j].pVal * len / (
-          i + 1);
+        pVals[j].qVal = robust ? pi0 * pVals[j].pVal * len / ((i + 1) * (1 - pow(1 - pVals[j].pVal,
+            len))) : pi0 * pVals[j].pVal * len / (i + 1);
       }
       dupcount = 0;
     }
@@ -92,8 +92,9 @@ void threshold_p_values(Opts opts)
   }
   size_t counter;
 
-  size_t[] pValCounts = new size_t[](cast(int)((opts.lambdaEnd - opts.lambdaStart) / opts.lambdaStep));
-  
+  size_t[] pValCounts = new size_t[](cast(int)((opts.lambdaEnd - opts.lambdaStart) / opts
+      .lambdaStep));
+
   foreach (ref line; inFile.byLine)
   {
     auto splitLine = line.split;
@@ -101,25 +102,24 @@ void threshold_p_values(Opts opts)
     try
     {
       enforce(splitLine.length > opts.col,
-        new InputException(
-        "Requested column " ~ to!string(opts.col + 1) ~ ", but row " ~ to!string(counter) ~ " has only " ~ splitLine
-        .length.to!string ~ " columns."));
+          new InputException("Requested column " ~ to!string(opts.col + 1) ~ ", but row " ~ to!string(
+            counter) ~ " has only " ~ splitLine.length.to!string ~ " columns."));
       pVal = to!double(splitLine[opts.col]);
       if (pVal >= 0 && pVal <= 1)
       {
-	counter++;
-	if (pVal < opts.lambdaStart)
-	{
-	  pValCounts[0]++;   
-	}
-	else if (pVal <= opts.lambdaEnd)
-	{
-	  pValCounts[cast(int)((pVal - opts.lambdaStart) / opts.lambdaStep + 1)]++;
-	}
-	if (pVal < opts.threshold)
-	{
-	  storePVals ~= SignificantLine(line.idup, pVal);
-	}
+        counter++;
+        if (pVal < opts.lambdaStart)
+        {
+          pValCounts[0]++;
+        }
+        else if (pVal <= opts.lambdaEnd)
+        {
+          pValCounts[cast(int)((pVal - opts.lambdaStart) / opts.lambdaStep + 1)]++;
+        }
+        if (pVal < opts.threshold)
+        {
+          storePVals ~= SignificantLine(line.idup, pVal);
+        }
       }
     }
     catch (ConvException e)
@@ -136,7 +136,6 @@ void threshold_p_values(Opts opts)
 
   auto orderIndex = new size_t[storePVals.length];
 
-  
   double pi0Final;
 
   if (opts.boot)
@@ -157,7 +156,7 @@ void threshold_p_values(Opts opts)
   }
 
   makeIndex!((a, b) => a.pVal < b.pVal)(storePVals, orderIndex);
-  
+
   pValtoQ(storePVals, orderIndex, pi0Final, opts.robust, counter);
 
   reverse(orderIndex);
@@ -171,11 +170,13 @@ void threshold_p_values(Opts opts)
     storePVals[e[1]].qVal = min(storePVals[e[1]].qVal, storePVals[e[0]].qVal, 1);
   }
 
-  string sep = opts.sep;
-
-  foreach (ref e; storePVals)
+  if (storePVals.length > 0)
   {
-    outFile.writeln(e.line, opts.sep, e.qVal.to!string);
+    auto sep = storePVals[0].line.canFind("\t") ? "\t" : " ";
+    foreach (ref e; storePVals)
+    {
+      outFile.writeln(e.line, sep, e.qVal.to!string);
+    }
   }
 
 }
