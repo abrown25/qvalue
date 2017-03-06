@@ -14,7 +14,7 @@ src/libspline.a : src/spline_src/* header/*
 .PHONY : ldc sample clean boot test static install dmd
 
 static	: $(SOURCES_D) $(LIB_GSL) src/bootstrap.o src/libspline.a
-	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -d-version=Have_largeqvalue -Isrc/ src/bootstrap.o $(SOURCES_D) src/bootstrap.o src/libspline.a $(LIB_GSL)
+	ldc -ofbin/largeQvalue -release -enable-inlining -O -w -oq -d-version=Have_largeqvalue -Isrc/ $(SOURCES_D) src/bootstrap.o src/libspline.a $(LIB_GSL)
 	rm -f src/bootstrap.o largeQvalue.o
 	strip bin/largeQvalue
 
